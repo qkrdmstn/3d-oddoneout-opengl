@@ -12,7 +12,7 @@ void draw(void)
 {
 	//Teapot 1개를 그리는 임시 루틴
 	glClear(GL_COLOR_BUFFER_BIT);
-	glColor3f(1.0f, 1.0f, 1.0f);
+	glColor3f(0.0f, 1.0f, 1.0f);
 	glutWireTeapot(0.5f);
 	glFlush();
 }
@@ -39,7 +39,7 @@ void idle(void)
 	printf("%d, second has elapsed since the system was started\n", GetTickCount() / 1000);
 }
 
-void size_menu_function(int option) //window 색상 초기화 & Teapot 크기 변경해서 다시 그리기
+void size_menu_function(int option)
 {
 	printf("SizeMenu %d has been selected\n", option);
 	switch (option)
@@ -61,32 +61,29 @@ void size_menu_function(int option) //window 색상 초기화 & Teapot 크기 변경해서 
 		break;
 	default:
 		break;
-	}	
+	}
 }
 
-void color_menu_function(int option) //기본색 변경 & draw 함수 호출해서 다시 기본색으로 그리기 (크기 0.5f 고정)
+void color_menu_function(int option)
 {
 	printf("ColorMenu %d has been selected\n", option);
 	switch (option)
 	{
 	case 1:
 		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-		draw();
 		break;
 	case 2:
 		glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
-		draw();
 		break;
 	case 3:
 		glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
-		draw();
 		break;
 	default:
 		break;
 	}
 }
 
-void main_menu_function (int option)
+void main_menu_function(int option)
 {
 	printf("Main menu %d has been selected\n", option);
 	if (option == 999)
@@ -95,8 +92,6 @@ void main_menu_function (int option)
 
 int main(int argc, char** argv)
 {
-	int sizeMenu, colorMenu;
-	int mainmenu;
 
 	//window 초기화
 	glutInit(&argc, argv);
@@ -106,31 +101,14 @@ int main(int argc, char** argv)
 	glutCreateWindow("My First GL Program");
 	init(); // 사용자 초기화 함수
 
-	//Popup menu 생성 및 추가
-	sizeMenu = glutCreateMenu(size_menu_function); //subMenu : Teapot Size 변경
-	glutAddMenuEntry("size 0.1f", 1);
-	glutAddMenuEntry("size 0.5f", 2);
-	glutAddMenuEntry("size 0.7f", 3);
-
-	colorMenu = glutCreateMenu(color_menu_function); //subMenu : 배경 기본색 변경
-	glutAddMenuEntry("Red", 1);
-	glutAddMenuEntry("Green", 2);
-	glutAddMenuEntry("Blue", 3);
-
-	mainmenu = glutCreateMenu(main_menu_function); //mainMenu : Quit, Go, Size(sub), Color(sub)
-	glutAddMenuEntry("Quit", 999);
-	glutAddMenuEntry("Go!", 11);	
-	glutAddSubMenu("Size", sizeMenu);
-	glutAddSubMenu("Color", colorMenu);
-	glutAttachMenu(GLUT_RIGHT_BUTTON); //마우스 오른쪽 버튼에 연결
-
+	
 	//Callback 함수 정의
 	glutDisplayFunc(draw); //draw -> 실제 그리기 함수
 	glutMouseFunc(mouse); //마우스 입력에 따른 callback
 	glutMotionFunc(motion); //마우스 움직임에 따른 callback
 	glutKeyboardFunc(keyboard); //키보드 입력에 따른 callback
-	//glutIdleFunc(idle);
-	
+	glutIdleFunc(idle);
+
 	//Looping 시작
 	glutMainLoop();
 
