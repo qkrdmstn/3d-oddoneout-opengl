@@ -7,6 +7,9 @@ bool spin_state = FALSE;
 double horizontal = 0.0f;
 double vertical = 0.0f;
 
+double xPos = 0.0f;
+double yPos = 0.0f;
+
 void init(void)
 {
     /* 화면의 기본색으로 blue 설정 */
@@ -50,7 +53,6 @@ void draw_line(void)
     glVertex2i(450, 50);
     glEnd();
 }
-
 void draw_triangle(void)
 {
     //면의 색상을 노란색으로
@@ -86,36 +88,24 @@ void draw_polygon(void)
 void draw(void)
 {
     glClear(GL_COLOR_BUFFER_BIT);
-    
+
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    glTranslatef(horizontal, vertical, 0);
+    //glTranslatef(horizontal, vertical, 0);
+    glTranslatef(xPos, yPos, 0);
 
-    /*glTranslatef(250, 250, 0);
+    glTranslatef(250, 250, 0);
     glRotatef(spin, 0, 0, 1);
-    glTranslatef(-250, -250, 0);*/
+    glTranslatef(-250, -250, 0);
 
     //draw_point();
     //draw_line();
     //draw_triangle();
-    draw_polygon();
+    //draw_polygon();
 
     glFlush();
-    glutSwapBuffers(); //double buffer swap
-}
-
-
-void mouse(int button, int state, int x, int y) {
-    /* 인자들을 해석해서 원하는 기능을 구현 */
-    printf("Mouse button is clicked! (%d, %d, %d, %d)\n",
-        button, state, x, y);
-}
-
-void motion(int x, int y)
-{
-    /* 인자들을 해석해서 원하는 기능을 구현 */
-    printf("Mouse is moving! (%d, %d)\n", x, y);
+    glutSwapBuffers();
 }
 
 void keyboard(unsigned char key, int x, int y)
@@ -134,25 +124,20 @@ void keyboard(unsigned char key, int x, int y)
 void specialKeyboard(int key, int x, int y)
 {
     if (key == GLUT_KEY_DOWN)
-    {
         vertical -= 5.0f;
-        printf("You pressed DOWN \n");
-    }
     else if (key == GLUT_KEY_UP)
-    {
         vertical += 5.0f;
-        printf("You pressed UP \n");
-    }
     else if (key == GLUT_KEY_LEFT)
-    {
         horizontal -= 5.0f;
-        printf("You pressed LEFT \n");
-    }
     else if (key == GLUT_KEY_RIGHT)
-    {
         horizontal += 5.0f;
-        printf("You pressed RIGHT \n");
-    }
+
+    if (vertical <= 0)
+        vertical = 0.0f;
+    if (horizontal <= 0)
+        horizontal = 0.0f;
+
+    printf("horizontalInput: %f , verticalInput: %f \n", horizontal, vertical);
 }
 
 void idle(void) {
@@ -166,9 +151,37 @@ void idle(void) {
     glutPostRedisplay();
 }
 
+void transform_menu_function(int option) //방향에 따른 이동거리 반영
+{
+    printf("transformMenu %d has been selected\n", option);
+    switch (option)
+    {
+    case 1: //up
+        yPos += vertical;
+        break;
+    case 2: //down
+        yPos -= vertical;
+        break;
+    case 3: //left
+        xPos -= horizontal;
+        break;
+    case 4: //right
+        xPos += horizontal;
+        break;
+    default:
+        break;
+    }
+}
+
+void main_menu_function(int option)
+{
+    printf("Main menu %d has been selected\n", option);
+    if (option == 999)
+        exit(0);
+}
+
 int main(int argc, char** argv)
 {
-
     /* Window 초기화 */
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
@@ -177,16 +190,27 @@ int main(int argc, char** argv)
     glutCreateWindow("My First GL Program");
     init(); // -> 사용자 초기화 함수
 
+    int transMenu;
+    int mainmenu;
+    transMenu = glutCreateMenu(transform_menu_function); //subMenu : 이동방향 설정
+    glutAddMenuEntry("UP", 1);
+    glutAddMenuEntry("DOWN", 2);
+    glutAddMenuEntry("LEFT", 3);
+    glutAddMenuEntry("RIGHT", 4);
+
+    mainmenu = glutCreateMenu(main_menu_function); //mainMenu
+    glutAddMenuEntry("Quit", 999);
+    glutAddMenuEntry("Go!", 11);
+    glutAddSubMenu("Transform", transMenu);
+    glutAttachMenu(GLUT_RIGHT_BUTTON); //마우스 오른쪽 버튼에 연결
+
     /* Callback 함수 정의 */
     glutDisplayFunc(draw); /* draw() -> 실제 그리기 함수 */
     glutKeyboardFunc(keyboard); //keyboard() -> 키보드 입력 감지 함수
-    glutSpecialFunc(specialKeyboard); //방향키 입력 감지 함수
+    glutSpecialFunc(specialKeyboard);
     glutIdleFunc(idle);
 
     /* Looping 시작 */
     glutMainLoop();
     return 0;
 }
-
-//방향키-> speacial keyboard
-//회전 flag => 키보드 입력에 따라 toggle
