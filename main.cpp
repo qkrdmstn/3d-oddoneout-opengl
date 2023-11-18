@@ -6,9 +6,11 @@
 #include <GL/freeglut.h>
 
 #include "Object.h"
+#include "Player.h"
 
 int g_nGLWidth = 1200, g_nGLHeight = 675;
 
+//camera 변수
 double theta = 0, phi = 0;
 Vec3<double> camPos(15, 1, 0);
 Vec3<double> camDirection(0, 0, 0);
@@ -21,8 +23,22 @@ int curPos[3];
 bool rightDown;
 bool firstDown;
 
-Object* cube;
-Object* cube2;
+//object 변수
+vector<Object*> interObj;
+vector<Object*> Obj;
+Object* focusedObj;
+Player* player;
+
+void objectInit(void)
+{
+	//Interactable Object
+	interObj.push_back(new Object("OBJ\\cube.obj", vec3(1, 0, 0), vec3(1, 1, 1)));
+	interObj.push_back(new Object("OBJ\\cube.obj", vec3(5, 0, 5), vec3(1, 0, 0)));
+
+	//Uninteractable Object
+	Obj.push_back(new Object("OBJ\\cube.obj", vec3(10, 0, 5), vec3(0, 1, 0)));
+}
+
 void init(void)
 {
 	glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
@@ -33,8 +49,8 @@ void init(void)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	cube = new Object("OBJ\\cube.obj",  vec3(1, 0, 0), vec3(1,1,1));
-	cube2 = new Object("OBJ\\cube.obj",  vec3(5, 0, 5), vec3(1,0,0));
+	objectInit();
+	//player = new Player();
 }
 
 void draw_axis()
@@ -56,21 +72,29 @@ void draw_axis()
 	glLineWidth(1);
 }
 
+void drawInterObject()
+{
+	//draw Interactable Object
+	for (int i = 0; i < interObj.size(); i++)
+	{
+		glLoadName(i);
+		glPushMatrix();
+		glTranslatef(interObj[i]->center.x(), interObj[i]->center.y(), interObj[i]->center.z());
+		interObj[i]->drawObj();
+		glPopMatrix();
+	}
+}
+
 void drawObject(void)
 {
-	glLoadName(1);
-	glPushMatrix();
-	glTranslatef(cube->center.x(), cube->center.y(), cube->center.z());
-	cube->drawObj();
-	//glutSolidSphere(5, 30, 30);
-	glPopMatrix();
-
-	glLoadName(2);
-	glPushMatrix();
-	glTranslatef(cube2->center.x(), cube2->center.y(), cube2->center.z());
-	cube2->drawObj();
-	//glutSolidSphere(5, 30, 30);
-	glPopMatrix();
+	//draw Uninteractable Object
+	for (int i = 0; i < Obj.size(); i++)
+	{
+		glPushMatrix();
+		glTranslatef(Obj[i]->center.x(), Obj[i]->center.y(), Obj[i]->center.z());
+		Obj[i]->drawObj();
+		glPopMatrix();
+	}
 }
 
 void draw(void)
@@ -81,8 +105,9 @@ void draw(void)
 
 	gluLookAt(camPos[0], camPos[1], camPos[2], camPos[0] + camDirection[0], camPos[1] + camDirection[1], camPos[2] + camDirection[2], camUp[0], camUp[1], camUp[2]);
 	
+	//drawObject
+	drawInterObject();
 	drawObject();
-
 
 	glPopMatrix();
 	draw_axis();
@@ -117,7 +142,7 @@ void picking(int x, int y)
 	gluPerspective(45, float(g_nGLWidth) / float(g_nGLHeight), 1, 500); // 원근 투영 행렬
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	drawObject();
+	drawInterObject();
 	glPopMatrix();
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
@@ -128,14 +153,32 @@ void picking(int x, int y)
 
 	// fifth step
 	if (hits <= 0) return;
-	int stack = selectBuf[0];
 
-	for (int i = 0; i < hits * 4; i++)
+	//for (int i = 0; i < hits * 4; i++)
+	//{
+	//	//if (!selectBuf[i]) break;
+	//	printf("%u ", selectBuf[i]);
+	//}
+	//printf("\n");
+
+	double minDist = 10.00f;
+	for (int i = 0; i < hits; i++)
 	{
-		if (!selectBuf[i]) break;
-		printf("%u ", selectBuf[i]);
+		int index = 3 + i * 4;
+		int idx = selectBuf[index];
+		double dist = (interObj[idx]->center - camPos).length();
+		//printf("dist: %f\n", dist);
+		if (dist < minDist) //가장 가까운 object 선별
+		{
+			focusedObj = interObj[idx];
+			minDist = dist;
+		}
 	}
-	printf("\n");
+
+	if (focusedObj != NULL)
+	{
+		focusedObj->color.set(0.0, 1.0, 1.0);
+	}
 }
 
 void resize(int width, int height)

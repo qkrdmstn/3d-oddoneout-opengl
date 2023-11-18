@@ -51,12 +51,17 @@ public:
 public:
 	Object(const char* fileName, vec3 _center, vec3 _color)
 	{
+		type = 2;
 		color = _color;
 		center = _center;
 		loadObj(fileName);
 	}
 	~Object();
 
+	Object()
+	{
+		type = 0;
+	}
 	void loadObj(const char* filename)
 	{
 		FILE* fp;
