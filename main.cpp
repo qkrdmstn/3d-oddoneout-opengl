@@ -1,8 +1,11 @@
-#include<gl\glut.h>
-#include <GL/freeglut.h>
 #include<stdio.h>
 #include <windows.h>
 #include <cmath>
+#include<gl\glut.h>
+#include <GL/freeglut.h>
+
+#include "Object.h"
+#include "Vec3.h"
 
 int g_nGLWidth = 1200, g_nGLHeight = 675;
 
@@ -18,6 +21,7 @@ int curPos[3];
 bool rightDown;
 bool firstDown;
 
+Object* cube;
 void init(void)
 {
 	glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
@@ -28,6 +32,7 @@ void init(void)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
+	cube = new Object("OBJ\\cube.obj",  vec3(1, 1, 0));
 }
 
 void draw_axis()
@@ -57,7 +62,12 @@ void draw(void)
 
 	gluLookAt(camPos[0], camPos[1], camPos[2], camPos[0] + camDirection[0], camPos[1] + camDirection[1], camPos[2] + camDirection[2], camUp[0], camUp[1], camUp[2]);
 	
-	glutWireTeapot(1.0f);
+	glPushMatrix(); //world ÁÂÇ¥ push
+
+	glTranslatef(cube->center.x(), cube->center.y(), cube->center.z());
+	cube->drawObj();
+
+	glPopMatrix();
 	draw_axis();
 
 	glutPostRedisplay();

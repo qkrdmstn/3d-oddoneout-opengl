@@ -9,7 +9,7 @@ public:
 	int state; //1: picking mode, 2: color mode
 	double pos[3]; //플레이어 위치
 	Object* brush; //로컬 좌표로 손 끝에 붙어있음.
-
+	
 public:
 
 	Player();
