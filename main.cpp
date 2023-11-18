@@ -1,18 +1,18 @@
+#include <cmath>
 #include<stdio.h>
 #include <windows.h>
-#include <cmath>
+
 #include<gl\glut.h>
 #include <GL/freeglut.h>
 
 #include "Object.h"
-#include "Vec3.h"
 
 int g_nGLWidth = 1200, g_nGLHeight = 675;
 
 double theta = 0, phi = 0;
-double camPos[3] = { 15,1,0 };
-double camDirection[3] = { 0,0,0 };
-double camUp[3] = { 0,1,0 };
+Vec3<double> camPos(15, 1, 0);
+Vec3<double> camDirection(0, 0, 0);
+Vec3<double> camUp(0, 1, 0);
 const double pi = 3.14;
 
 //mouse 변수
@@ -92,11 +92,9 @@ void resize(int width, int height)
 void keyboard(unsigned char key, int x, int y)
 {
 	double cameraSpeed = 2.0f;
-	double cameraV[3] = { camDirection[1] * camUp[2] - camUp[1] * camDirection[2], //카메라 uvn 좌표계: v 방향
-						  camDirection[2] * camUp[0] - camUp[2] * camDirection[0], 
-						  camDirection[0] * camUp[1] - camUp[0] * camDirection[1] };
+	Vec3<double> cameraV = camDirection.cross(camUp); //카메라 uvn 좌표계 중, v축 방향
 
-	if (key == 'w') //n 방향으로 이동
+	if (key == 'w') //n 방향으로 이동, y축 방향 이동 x
 	{
 		camPos[0] += camDirection[0] * cameraSpeed;
 		//camPos[1] += camDirection[1] * cameraSpeed;
@@ -167,15 +165,13 @@ void motion(int x, int y)
 		else if (theta < -90)
 			theta = -90;
 
-		double front[3];
+		Vec3<double> front;
 		front[0] = cos(phi * pi / 180) * cos(theta * pi / 180);
 		front[1] = sin(theta * pi / 180);
 		front[2] = cos(theta * pi / 180) * sin(phi * pi / 180);
+		front.normalize();
 
-		double norm = sqrt(pow(front[0], 2) + pow(front[1], 2) + pow(front[2], 2)); //normalize
-		camDirection[0] = front[0] / norm;
-		camDirection[1] = front[1] / norm;
-		camDirection[2] = front[2] / norm;
+		camDirection = front;
 	}
 }
 
