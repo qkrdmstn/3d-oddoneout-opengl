@@ -22,6 +22,7 @@ bool rightDown;
 bool firstDown;
 
 Object* cube;
+Object* cube2;
 void init(void)
 {
 	glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
@@ -32,7 +33,8 @@ void init(void)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	cube = new Object("OBJ\\cube.obj",  vec3(1, 1, 0));
+	cube = new Object("OBJ\\cube.obj",  vec3(1, 0, 0), vec3(1,1,1));
+	cube2 = new Object("OBJ\\cube.obj",  vec3(5, 0, 5), vec3(1,0,0));
 }
 
 void draw_axis()
@@ -54,6 +56,23 @@ void draw_axis()
 	glLineWidth(1);
 }
 
+void drawObject(void)
+{
+	glLoadName(1);
+	glPushMatrix();
+	glTranslatef(cube->center.x(), cube->center.y(), cube->center.z());
+	cube->drawObj();
+	//glutSolidSphere(5, 30, 30);
+	glPopMatrix();
+
+	glLoadName(2);
+	glPushMatrix();
+	glTranslatef(cube2->center.x(), cube2->center.y(), cube2->center.z());
+	cube2->drawObj();
+	//glutSolidSphere(5, 30, 30);
+	glPopMatrix();
+}
+
 void draw(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -62,10 +81,8 @@ void draw(void)
 
 	gluLookAt(camPos[0], camPos[1], camPos[2], camPos[0] + camDirection[0], camPos[1] + camDirection[1], camPos[2] + camDirection[2], camUp[0], camUp[1], camUp[2]);
 	
-	glPushMatrix(); //world 좌표 push
+	drawObject();
 
-	glTranslatef(cube->center.x(), cube->center.y(), cube->center.z());
-	cube->drawObj();
 
 	glPopMatrix();
 	draw_axis();
@@ -78,6 +95,47 @@ void draw(void)
 void idle(void)
 {
 
+}
+
+void picking(int x, int y)
+{
+	GLuint selectBuf[256];
+	glSelectBuffer(256, selectBuf);
+
+	glRenderMode(GL_SELECT);
+	glMatrixMode(GL_PROJECTION);
+
+	glInitNames();
+	glPushName(-1);
+
+	GLint viewport[4];
+	glGetIntegerv(GL_VIEWPORT, viewport);
+	glPushMatrix();
+	glLoadIdentity();
+
+	gluPickMatrix(x, y, 1, 1, viewport);
+	gluPerspective(45, float(g_nGLWidth) / float(g_nGLHeight), 1, 500); // 원근 투영 행렬
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	drawObject();
+	glPopMatrix();
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glFlush();
+
+	GLint hits = glRenderMode(GL_RENDER);
+	printf("hits: %d\n", hits);
+
+	// fifth step
+	if (hits <= 0) return;
+	int stack = selectBuf[0];
+
+	for (int i = 0; i < hits * 4; i++)
+	{
+		if (!selectBuf[i]) break;
+		printf("%u ", selectBuf[i]);
+	}
+	printf("\n");
 }
 
 void resize(int width, int height)
@@ -131,6 +189,11 @@ void mouse(int button, int state, int x, int y)
 	else if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP)
 	{
 		rightDown = false;
+	}
+	else if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+	{
+		y = g_nGLHeight - y;
+		picking(x, y);
 	}
 }
 

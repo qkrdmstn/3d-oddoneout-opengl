@@ -47,10 +47,11 @@ public:
 	Vec3<double> color;
 	vector<Vertex*> _vertices;
 	vector<Face*> _faces;
-
+	
 public:
-	Object(const char* fileName, vec3 _center)
+	Object(const char* fileName, vec3 _center, vec3 _color)
 	{
+		color = _color;
 		center = _center;
 		loadObj(fileName);
 	}
@@ -71,7 +72,7 @@ public:
 				_vertices.push_back(new Vertex(index++, vec3(pos[0], pos[1], pos[2])));
 			}
 		}
-		printf("num. vertices : %d\n", _vertices.size());
+		//printf("num. vertices : %d\n", _vertices.size());
 
 		index = 0;
 		fseek(fp, 0, SEEK_SET);
@@ -91,7 +92,7 @@ public:
 
 	void drawObj(void)
 	{
-		glColor3f(1, 1, 1); //100
+		glColor3f(color[0], color[1], color[2]); //100
 		for (auto f : _faces) {
 			glBegin(GL_POLYGON);
 			glNormal3f(f->normal.x(), f->normal.y(), f->normal.z());
