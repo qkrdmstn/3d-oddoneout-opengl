@@ -1,5 +1,6 @@
 #include <cmath>
-#include<stdio.h>
+#include <string>
+#include <stdio.h>
 #include <windows.h>
 
 #include<gl\glut.h>
@@ -29,6 +30,8 @@ vector<Object*> Obj;
 Object* focusedObj;
 Player* player;
 bool isPicking;
+
+bool temp;
 
 void objectInit(void)
 {
@@ -131,6 +134,42 @@ void drawObject(void)
 	}
 }
 
+void draw_string(void* font, const char* str, float x_position, float y_position, float red, float green, float blue) {
+	glPushAttrib(GL_LIGHTING_BIT);
+	glDisable(GL_LIGHTING);
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	gluOrtho2D(-10, 10, -10, 10);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+	glColor3f(red, green, blue);
+	glRasterPos3f(x_position, y_position, 0);
+	for (unsigned int i = 0; i < strlen(str); i++) {
+		glutBitmapCharacter(font, str[i]);
+	}
+	glPopMatrix();
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopAttrib();
+}
+
+void drawText() {
+	if (player->state == 2 && temp)
+	{
+		string R = "R: " + to_string(player->brush->color.x());
+		string G = " G: " + to_string(player->brush->color.y());
+		string B = " B: " + to_string(player->brush->color.z());
+
+		char* str = const_cast<char*>((R+G+B).c_str());
+
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, str, -9.5, 8.7, player->brush->color.x(), player->brush->color.y(), player->brush->color.z()); //나중에 글자색 바꾸기
+	}
+}
+
+
 void draw(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -142,7 +181,9 @@ void draw(void)
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
 	gluLookAt(camPos[0], camPos[1], camPos[2], camPos[0] + camDirection[0], camPos[1] + camDirection[1], camPos[2] + camDirection[2], camUp[0], camUp[1], camUp[2]);
-	
+	drawText();
+
+
 	//drawObject
 	drawInterObject();
 	drawObject();
@@ -150,6 +191,7 @@ void draw(void)
 
 	glPopMatrix();
 	draw_axis();
+
 
 	glutPostRedisplay();
 	glFlush();
@@ -286,6 +328,11 @@ void keyboard(unsigned char key, int x, int y)
 		player->state = 2;
 		printf("player is Color Mode\n");
 	}
+
+	if (key == 'c')
+	{
+		temp = true;
+	}
 }
 
 void mouse(int button, int state, int x, int y) 
@@ -380,9 +427,73 @@ void motion(int x, int y)
 	}
 }
 
+int curColor = 0; //임시..
 void specialkeyboard(int key, int x, int y)
 {
 
+	if (player->state == 2 && temp)
+	{
+		if (key == GLUT_KEY_LEFT)
+		{
+			curColor--;
+		}
+		else if (key == GLUT_KEY_RIGHT)
+		{
+			curColor++;
+		}
+
+		if (curColor > 3)
+			curColor = 3;
+		else if (curColor < 0)
+			curColor = 0;
+
+		if (curColor == 0)
+		{
+			if (key == GLUT_KEY_UP)
+			{
+				player->brush->color[0] += 0.1;
+				if (player->brush->color[0] > 1)
+					player->brush->color[0] = 1;
+			}
+			else if (key == GLUT_KEY_DOWN)
+			{
+				player->brush->color[0] -= 0.1;
+				if (player->brush->color[0] < 0)
+					player->brush->color[0] = 0;
+			}
+		}
+		else if (curColor == 1)
+		{
+			if (key == GLUT_KEY_UP)
+			{
+				player->brush->color[1] += 0.1;
+				if (player->brush->color[1] > 1)
+					player->brush->color[1] = 1;
+			}
+			else if (key == GLUT_KEY_DOWN)
+			{
+				player->brush->color[1] -= 0.1;
+				if (player->brush->color[1] < 0)
+					player->brush->color[1] = 0;
+			}
+		}
+		else if (curColor == 2)
+		{
+			if (key == GLUT_KEY_UP)
+			{
+				player->brush->color[2] += 0.1;
+				if (player->brush->color[2] > 1)
+					player->brush->color[2] = 1;
+			}
+			else if (key == GLUT_KEY_DOWN)
+			{
+				player->brush->color[2] -= 0.1;
+				if (player->brush->color[2] < 0)
+					player->brush->color[2] = 0;
+			}
+		}
+
+	}
 }
 
 void entry(int state)

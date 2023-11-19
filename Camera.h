@@ -1,6 +1,6 @@
 #pragma once
 
-class Camera
+class GameManager
 {
 public:
 	double theta = 0, phi = 0;
@@ -9,6 +9,6 @@ public:
 	double camUp[3] = { 0,1,0 };
 
 public:
-	Camera();
-	~Camera();
+	GameManager();
+	~GameManager();
 };
