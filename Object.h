@@ -58,10 +58,6 @@ public:
 	}
 	~Object();
 
-	Object()
-	{
-		type = 0;
-	}
 	void loadObj(const char* filename)
 	{
 		FILE* fp;
@@ -106,6 +102,7 @@ public:
 			}
 			glEnd();
 		}
+		//glutSolidSphere(1, 30, 30);
 	}
 
 };

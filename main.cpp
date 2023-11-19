@@ -28,6 +28,7 @@ vector<Object*> interObj;
 vector<Object*> Obj;
 Object* focusedObj;
 Player* player;
+bool isPicking;
 
 void objectInit(void)
 {
@@ -37,6 +38,36 @@ void objectInit(void)
 
 	//Uninteractable Object
 	Obj.push_back(new Object("OBJ\\cube.obj", vec3(10, 0, 5), vec3(0, 1, 0)));
+}
+
+void lightInit(void)
+{
+	// 0번 조명 관련 설정
+	GLfloat light_ambient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+	GLfloat light_diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	GLfloat light_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+
+	// 조명 스위치와 0번 조명 스위치 켜기
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+
+	//재질 반사 특성 설정 init()에 추가
+	GLfloat ambientMat[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+	GLfloat diffuseMat[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	GLfloat specularMat[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	glMaterialfv(GL_FRONT, GL_AMBIENT, ambientMat);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseMat);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, specularMat);
+	glMaterialf(GL_FRONT, GL_SHININESS, 64);
+
+	//color_material
+	glEnable(GL_COLOR_MATERIAL);
+	glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 }
 
 void init(void)
@@ -49,6 +80,9 @@ void init(void)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
+	lightInit();
+
+	player = new Player(0, &camPos, &camDirection);
 	objectInit();
 	//player = new Player();
 }
@@ -103,11 +137,16 @@ void draw(void)
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
+	//카메라 위치 조명
+	GLfloat light_position[] = { 0.0, 0.0, 0.0, 1.0 };
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
 	gluLookAt(camPos[0], camPos[1], camPos[2], camPos[0] + camDirection[0], camPos[1] + camDirection[1], camPos[2] + camDirection[2], camUp[0], camUp[1], camUp[2]);
 	
 	//drawObject
 	drawInterObject();
 	drawObject();
+	//player->drawPlayer();
 
 	glPopMatrix();
 	draw_axis();
@@ -120,6 +159,18 @@ void draw(void)
 void idle(void)
 {
 
+}
+
+void pickingEvent()
+{
+	if (player->state == 1) //picking 모드
+	{
+		isPicking = true;
+	}
+	else if (player->state == 2) //color 모드
+	{
+		focusedObj->color.set(player->brush->color);
+	}
 }
 
 void picking(int x, int y)
@@ -138,7 +189,7 @@ void picking(int x, int y)
 	glPushMatrix();
 	glLoadIdentity();
 
-	gluPickMatrix(x, y, 1, 1, viewport);
+	gluPickMatrix(x, y, 0.1, 0.1, viewport);
 	gluPerspective(45, float(g_nGLWidth) / float(g_nGLHeight), 1, 500); // 원근 투영 행렬
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
@@ -149,7 +200,7 @@ void picking(int x, int y)
 	glFlush();
 
 	GLint hits = glRenderMode(GL_RENDER);
-	printf("hits: %d\n", hits);
+	//printf("hits: %d\n", hits);
 
 	// fifth step
 	if (hits <= 0) return;
@@ -161,7 +212,8 @@ void picking(int x, int y)
 	//}
 	//printf("\n");
 
-	double minDist = 10.00f;
+	bool interaction = false;
+	double minDist = 10.00f; //상호작용 최소 거리
 	for (int i = 0; i < hits; i++)
 	{
 		int index = 3 + i * 4;
@@ -172,14 +224,16 @@ void picking(int x, int y)
 		{
 			focusedObj = interObj[idx];
 			minDist = dist;
+			interaction = true;
 		}
 	}
 
-	if (focusedObj != NULL)
+	if (focusedObj != NULL && interaction) //focused obj 확인용
 	{
-		focusedObj->color.set(0.0, 1.0, 1.0);
+		pickingEvent();
 	}
 }
+
 
 void resize(int width, int height)
 {
@@ -200,6 +254,7 @@ void keyboard(unsigned char key, int x, int y)
 		camPos[0] += camDirection[0] * cameraSpeed;
 		//camPos[1] += camDirection[1] * cameraSpeed;
 		camPos[2] += camDirection[2] * cameraSpeed;
+
 	}
 	else if (key == 's')
 	{
@@ -220,6 +275,17 @@ void keyboard(unsigned char key, int x, int y)
 		//camPos[1] -= cameraH[1] * cameraSpeed;
 		camPos[2] -= cameraV[2] * cameraSpeed;
 	}
+
+	if (key == '1')
+	{
+		player->state = 1;
+		printf("player is Picking Mode\n");
+	}	
+	else if (key == '2')
+	{
+		player->state = 2;
+		printf("player is Color Mode\n");
+	}
 }
 
 void mouse(int button, int state, int x, int y) 
@@ -237,6 +303,10 @@ void mouse(int button, int state, int x, int y)
 	{
 		y = g_nGLHeight - y;
 		picking(x, y);
+	}
+	else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
+	{
+		isPicking = false;
 	}
 }
 
@@ -278,6 +348,35 @@ void motion(int x, int y)
 		front.normalize();
 
 		camDirection = front;
+	}
+
+	if (isPicking)
+	{
+		GLint viewport[4];
+		GLdouble modelview[16];
+		GLdouble projection[16];
+		GLfloat winX, winY, winZ;
+		GLdouble posX, posY, posZ;
+
+		glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+		glGetDoublev(GL_PROJECTION_MATRIX, projection);
+		glGetIntegerv(GL_VIEWPORT, viewport);
+
+		winX = (float)x;
+		winY = (float)viewport[3] - (float)y;
+		glReadPixels(x, int(winY), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ);
+
+		gluUnProject(winX, winY, winZ, modelview, projection, viewport, &posX, &posY, &posZ);
+		//printf("x: %f, y: %f, z: %f\n", posX, posY, posZ);
+
+		vec3 clickPos(posX, posY, posZ);
+		vec3 normalPos = (clickPos - camPos); //카메라-마우스 클릭 좌표 방향벡터
+		normalPos.normalize();
+
+		double dist = (camPos-focusedObj->center).length(); //움직일 때, 원래의 거리를 유지
+		vec3 objPos = camPos + normalPos * dist;
+
+		focusedObj->center.set(objPos);
 	}
 }
 
