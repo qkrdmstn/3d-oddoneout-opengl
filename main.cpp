@@ -13,8 +13,8 @@ int g_nGLWidth = 1200, g_nGLHeight = 675;
 
 //camera 변수
 double theta = 0, phi = 0;
-Vec3<double> camPos(15, 1, 0);
-Vec3<double> camDirection(0, 0, 0);
+Vec3<double> camPos(0, 1, 10);
+Vec3<double> camDirection(0, 0, -10);
 Vec3<double> camUp(0, 1, 0);
 const double pi = 3.14;
 
@@ -29,18 +29,21 @@ vector<Object*> interObj;
 vector<Object*> Obj;
 Object* focusedObj;
 Player* player;
-bool isPicking;
 
-bool temp;
+//picking & selection
+int curColor = -1;
+bool isPicking = false;
+
 
 void objectInit(void)
 {
-	//Interactable Object
-	interObj.push_back(new Object("OBJ\\cube.obj", vec3(1, 0, 0), vec3(1, 1, 1)));
-	interObj.push_back(new Object("OBJ\\cube.obj", vec3(5, 0, 5), vec3(1, 0, 0)));
-
 	//Uninteractable Object
-	Obj.push_back(new Object("OBJ\\cube.obj", vec3(10, 0, 5), vec3(0, 1, 0)));
+	Obj.push_back(new Object("OBJ\\treeN.obj","OBJ\\tree_UVmap.bmp", vec3(0, 0, 0), 0, vec3(1, 1, 1), 0));
+	//Obj.push_back(new Object("OBJ\\treeN.obj", vec3(5, 0, 5), 0, vec3(0, 1, 0), 0));
+
+	//Interactable Object
+	interObj.push_back(new Object("OBJ\\treeN.obj", "OBJ\\tree_UVmap.bmp", vec3(0, 2, 0), 0, vec3(1, 1, 1), 2, Obj[0]));
+//	interObj.push_back(new Object("OBJ\\treeN.obj", vec3(0.5, 3, 0.5), 0, vec3(1, 1, 0), 2, Obj[1]));
 }
 
 void lightInit(void)
@@ -48,7 +51,7 @@ void lightInit(void)
 	// 0번 조명 관련 설정
 	GLfloat light_ambient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
 	GLfloat light_diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	GLfloat light_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	GLfloat light_specular[] = { 0.1f, 0.1f, 0.1f, 1.0f };
 
 	glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
@@ -61,16 +64,17 @@ void lightInit(void)
 	//재질 반사 특성 설정 init()에 추가
 	GLfloat ambientMat[] = { 0.2f, 0.2f, 0.2f, 1.0f };
 	GLfloat diffuseMat[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	GLfloat specularMat[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	GLfloat specularMat[] = { 0.1f, 0.1f, 0.1f, 1.0f };
 
 	glMaterialfv(GL_FRONT, GL_AMBIENT, ambientMat);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseMat);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, specularMat);
-	glMaterialf(GL_FRONT, GL_SHININESS, 64);
+	glMaterialf(GL_FRONT, GL_SHININESS, 128);
 
-	//color_material
+	////color_material
 	glEnable(GL_COLOR_MATERIAL);
 	glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+	//glColorMaterial(GL_FRONT, GL_SPECULAR);
 }
 
 void init(void)
@@ -84,6 +88,10 @@ void init(void)
 	glLoadIdentity();
 
 	lightInit();
+
+	//texture
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);	//polygon의 원래 색상은 무시하고 texture로 덮음
+	glEnable(GL_TEXTURE_2D);
 
 	player = new Player(0, &camPos, &camDirection);
 	objectInit();
@@ -116,7 +124,8 @@ void drawInterObject()
 	{
 		glLoadName(i);
 		glPushMatrix();
-		glTranslatef(interObj[i]->center.x(), interObj[i]->center.y(), interObj[i]->center.z());
+		glTranslatef(interObj[i]->pos.x(), interObj[i]->pos.y(), interObj[i]->pos.z());
+		glRotatef(interObj[i]->rot, 0, 1, 0);
 		interObj[i]->drawObj();
 		glPopMatrix();
 	}
@@ -127,8 +136,9 @@ void drawObject(void)
 	//draw Uninteractable Object
 	for (int i = 0; i < Obj.size(); i++)
 	{
-		glPushMatrix();
-		glTranslatef(Obj[i]->center.x(), Obj[i]->center.y(), Obj[i]->center.z());
+		glPushMatrix(); 
+		glTranslatef(Obj[i]->pos.x(), Obj[i]->pos.y(), Obj[i]->pos.z());
+		glRotatef(Obj[i]->rot, 0, 1, 0);
 		Obj[i]->drawObj();
 		glPopMatrix();
 	}
@@ -157,18 +167,21 @@ void draw_string(void* font, const char* str, float x_position, float y_position
 }
 
 void drawText() {
-	if (player->state == 2 && temp)
+	if (player->state == 2 && curColor != -1 )
 	{
 		string R = "R: " + to_string(player->brush->color.x());
-		string G = " G: " + to_string(player->brush->color.y());
-		string B = " B: " + to_string(player->brush->color.z());
+		string G = "G: " + to_string(player->brush->color.y());
+		string B = "B: " + to_string(player->brush->color.z());
 
-		char* str = const_cast<char*>((R+G+B).c_str());
+		char* strR = const_cast<char*>((R).c_str());
+		char* strG = const_cast<char*>((G).c_str());
+		char* strB = const_cast<char*>((B).c_str());
 
-		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, str, -9.5, 8.7, player->brush->color.x(), player->brush->color.y(), player->brush->color.z()); //나중에 글자색 바꾸기
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strR, -9.8, -8.2, player->brush->color.x(), player->brush->color.y(), player->brush->color.z()); //나중에 글자색 바꾸기
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strG, -9.8, -8.9, player->brush->color.x(), player->brush->color.y(), player->brush->color.z()); //나중에 글자색 바꾸기
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strB, -9.8, -9.6, player->brush->color.x(), player->brush->color.y(), player->brush->color.z()); //나중에 글자색 바꾸기
 	}
 }
-
 
 void draw(void)
 {
@@ -177,20 +190,24 @@ void draw(void)
 	glLoadIdentity();
 
 	//카메라 위치 조명
-	GLfloat light_position[] = { 0.0, 0.0, 0.0, 1.0 };
-	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+	//glDisable(GL_LIGHT0);
+	player->drawPlayer();
 
 	gluLookAt(camPos[0], camPos[1], camPos[2], camPos[0] + camDirection[0], camPos[1] + camDirection[1], camPos[2] + camDirection[2], camUp[0], camUp[1], camUp[2]);
+	draw_axis();
+	GLfloat light_position[] = { 0.0, 10.0, 0.0, 1.0 };
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 	drawText();
 
-
 	//drawObject
-	drawInterObject();
-	drawObject();
-	//player->drawPlayer();
-
-	glPopMatrix();
+	glPushMatrix();
+	glTranslatef(-50, 0, 0); //<보기>맵 local 좌표
 	draw_axis();
+	drawObject();
+	glPopMatrix();
+	
+	drawInterObject();
 
 
 	glutPostRedisplay();
@@ -200,7 +217,16 @@ void draw(void)
 
 void idle(void)
 {
-
+	int i = 0;
+	for (auto interObj: interObj)
+	{
+		if (interObj->isCorrect())
+		{
+			i++;
+		}
+	}
+	if (i == 2)
+		printf("clear\n");
 }
 
 void pickingEvent()
@@ -260,7 +286,7 @@ void picking(int x, int y)
 	{
 		int index = 3 + i * 4;
 		int idx = selectBuf[index];
-		double dist = (interObj[idx]->center - camPos).length();
+		double dist = (interObj[idx]->pos - camPos).length();
 		//printf("dist: %f\n", dist);
 		if (dist < minDist) //가장 가까운 object 선별
 		{
@@ -294,29 +320,45 @@ void keyboard(unsigned char key, int x, int y)
 	if (key == 'w') //n 방향으로 이동, y축 방향 이동 x
 	{
 		camPos[0] += camDirection[0] * cameraSpeed;
-		//camPos[1] += camDirection[1] * cameraSpeed;
 		camPos[2] += camDirection[2] * cameraSpeed;
-
+		if (isPicking)
+		{
+			focusedObj->pos[0] += camDirection[0] * cameraSpeed;
+			focusedObj->pos[2] += camDirection[2] * cameraSpeed;
+		}
 	}
 	else if (key == 's')
 	{
 		camPos[0] -= camDirection[0] * cameraSpeed;
-		//camPos[1] -= camDirection[1] * cameraSpeed;
 		camPos[2] -= camDirection[2] * cameraSpeed;
+		if (isPicking)
+		{
+			focusedObj->pos[0] -= camDirection[0] * cameraSpeed;
+			focusedObj->pos[2] -= camDirection[2] * cameraSpeed;
+		}
 	}
 
 	if (key == 'd') //v 방향으로 이동
 	{
 		camPos[0] += cameraV[0] * cameraSpeed;
-		//camPos[1] += cameraH[1] * cameraSpeed;
 		camPos[2] += cameraV[2] * cameraSpeed;
+		if (isPicking)
+		{
+			focusedObj->pos[0] += cameraV[0] * cameraSpeed;
+			focusedObj->pos[2] += cameraV[2] * cameraSpeed;
+		}
 	}
 	else if (key == 'a') 
 	{
 		camPos[0] -= cameraV[0] * cameraSpeed;
-		//camPos[1] -= cameraH[1] * cameraSpeed;
 		camPos[2] -= cameraV[2] * cameraSpeed;
+		if (isPicking)
+		{
+			focusedObj->pos[0] -= cameraV[0] * cameraSpeed;
+			focusedObj->pos[2] -= cameraV[2] * cameraSpeed;
+		}
 	}
+
 
 	if (key == '1')
 	{
@@ -327,11 +369,6 @@ void keyboard(unsigned char key, int x, int y)
 	{
 		player->state = 2;
 		printf("player is Color Mode\n");
-	}
-
-	if (key == 'c')
-	{
-		temp = true;
 	}
 }
 
@@ -420,80 +457,99 @@ void motion(int x, int y)
 		vec3 normalPos = (clickPos - camPos); //카메라-마우스 클릭 좌표 방향벡터
 		normalPos.normalize();
 
-		double dist = (camPos-focusedObj->center).length(); //움직일 때, 원래의 거리를 유지
+		double dist = (camPos-focusedObj->pos).length(); //움직일 때, 원래의 거리를 유지
 		vec3 objPos = camPos + normalPos * dist;
 
-		focusedObj->center.set(objPos);
+		focusedObj->pos.set(objPos);
 	}
 }
 
-int curColor = 0; //임시..
-void specialkeyboard(int key, int x, int y)
+void colorModeWheelInput(int direction)
 {
-
-	if (player->state == 2 && temp)
+	if (curColor == 0)
 	{
-		if (key == GLUT_KEY_LEFT)
+		if (direction > 0)
 		{
-			curColor--;
+			player->brush->color[0] += 0.1;
+			if (player->brush->color[0] > 1)
+				player->brush->color[0] = 1;
 		}
-		else if (key == GLUT_KEY_RIGHT)
+		else
 		{
-			curColor++;
+			player->brush->color[0] -= 0.1;
+			if (player->brush->color[0] < 0)
+				player->brush->color[0] = 0;
 		}
+	}
+	else if (curColor == 1)
+	{
+		if (direction > 0)
+		{
+			player->brush->color[1] += 0.1;
+			if (player->brush->color[1] > 1)
+				player->brush->color[1] = 1;
+		}
+		else
+		{
+			player->brush->color[1] -= 0.1;
+			if (player->brush->color[1] < 0)
+				player->brush->color[1] = 0;
+		}
+	}
+	else if (curColor == 2)
+	{
+		if (direction > 0)
+		{
+			player->brush->color[2] += 0.1;
+			if (player->brush->color[2] > 1)
+				player->brush->color[2] = 1;
+		}
+		else
+		{
+			player->brush->color[2] -= 0.1;
+			if (player->brush->color[2] < 0)
+				player->brush->color[2] = 0;
+		}
+	}
+}
 
-		if (curColor > 3)
-			curColor = 3;
-		else if (curColor < 0)
-			curColor = 0;
-
-		if (curColor == 0)
+void pickModeWheelInput(int direction)
+{
+	if (focusedObj != NULL)
+	{
+		 if (direction > 0)
 		{
-			if (key == GLUT_KEY_UP)
-			{
-				player->brush->color[0] += 0.1;
-				if (player->brush->color[0] > 1)
-					player->brush->color[0] = 1;
-			}
-			else if (key == GLUT_KEY_DOWN)
-			{
-				player->brush->color[0] -= 0.1;
-				if (player->brush->color[0] < 0)
-					player->brush->color[0] = 0;
-			}
+			focusedObj->rot -= 10;
+			if (focusedObj->rot < 0)
+				focusedObj->rot += 360;
 		}
-		else if (curColor == 1)
+		else
 		{
-			if (key == GLUT_KEY_UP)
-			{
-				player->brush->color[1] += 0.1;
-				if (player->brush->color[1] > 1)
-					player->brush->color[1] = 1;
-			}
-			else if (key == GLUT_KEY_DOWN)
-			{
-				player->brush->color[1] -= 0.1;
-				if (player->brush->color[1] < 0)
-					player->brush->color[1] = 0;
-			}
-		}
-		else if (curColor == 2)
-		{
-			if (key == GLUT_KEY_UP)
-			{
-				player->brush->color[2] += 0.1;
-				if (player->brush->color[2] > 1)
-					player->brush->color[2] = 1;
-			}
-			else if (key == GLUT_KEY_DOWN)
-			{
-				player->brush->color[2] -= 0.1;
-				if (player->brush->color[2] < 0)
-					player->brush->color[2] = 0;
-			}
+			focusedObj->rot += 10;
+			if (focusedObj->rot > 360)
+				focusedObj->rot -= 360;
 		}
 
 	}
+
+}
+
+void specialkeyboard(int key, int x, int y)
+{
+
+}
+
+void mouse_wheel(int wheel, int direction, int x, int y) {
+
+	if (player->state == 1)
+	{
+		pickModeWheelInput(direction);
+	}
+	else if (player->state == 2)
+	{
+		colorModeWheelInput(direction);
+	}
+
 }
 
 void entry(int state)
@@ -501,6 +557,50 @@ void entry(int state)
 	//printf("state: %d\n", state);
 	//if (state == GLUT_ENTERED)
 	//	firstDown = true;
+}
+
+void color_menu_function(int option) //기본색 변경 & draw 함수 호출해서 다시 기본색으로 그리기 (크기 0.5f 고정)
+{
+	switch (option)
+	{
+	case 1:
+		curColor = 0;
+		break;
+	case 2:
+		curColor = 1;
+		break;
+	case 3:
+		curColor = 2;
+		break;
+	case 4:
+		curColor = -1;
+		break;
+	default:
+		break;
+	}
+}
+
+void main_menu_function(int option)
+{
+	if (option == 1 && focusedObj != NULL)
+	{
+		focusedObj->rot = 0;
+	}
+}
+
+void menuSetting()
+{
+	int colorMenu, mainMenu;
+	colorMenu = glutCreateMenu(color_menu_function); //subMenu : 배경 기본색 변경
+	glutAddMenuEntry("Red", 1);
+	glutAddMenuEntry("Green", 2);
+	glutAddMenuEntry("Blue", 3);
+	glutAddMenuEntry("Close", 4);
+
+	mainMenu = glutCreateMenu(main_menu_function); //mainMenu : Quit, Go, Size(sub), Color(sub)
+	glutAddMenuEntry("Init Rotation", 1);
+	glutAddSubMenu("ColorSelect", colorMenu);
+	glutAttachMenu(GLUT_MIDDLE_BUTTON); //마우스 오른쪽 버튼에 연결
 }
 
 int main(int argc, char ** argv)
@@ -515,10 +615,14 @@ int main(int argc, char ** argv)
 	glutDisplayFunc(draw);
 	glutReshapeFunc(resize);
 	glutMouseFunc(mouse);
+	glutMouseWheelFunc(mouse_wheel);
 	glutMotionFunc(motion); //마우스 버튼 클릭한 채 이동
 	glutSpecialFunc(specialkeyboard);
 	glutKeyboardFunc(keyboard);
+	glutIdleFunc(idle);
 	//glutEntryFunc(entry); //window 포커스 감지
+
+	menuSetting();
 
 	/* Looping 시작 */
 	glutMainLoop();
