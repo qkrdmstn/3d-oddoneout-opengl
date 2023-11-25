@@ -7,6 +7,7 @@
 #include <GL/freeglut.h>
 
 #include "Object.h"
+#include "TexObject.h"
 #include "Player.h"
 
 int g_nGLWidth = 1200, g_nGLHeight = 675;
@@ -38,11 +39,12 @@ bool isPicking = false;
 void objectInit(void)
 {
 	//Uninteractable Object
-	Obj.push_back(new Object("OBJ\\treeN.obj","OBJ\\tree_UVmap.bmp", vec3(0, 0, 0), 0, vec3(1, 1, 1), 0));
+	Obj.push_back(new TexObject("OBJ\\treeN.obj", vec3(0, 2, 0), 0, vec3(1, 1, 1), 0, "OBJ\\tree_UVmap.bmp"));
 	//Obj.push_back(new Object("OBJ\\treeN.obj", vec3(5, 0, 5), 0, vec3(0, 1, 0), 0));
 
 	//Interactable Object
-	interObj.push_back(new Object("OBJ\\treeN.obj", "OBJ\\tree_UVmap.bmp", vec3(0, 2, 0), 0, vec3(1, 1, 1), 2, Obj[0]));
+	interObj.push_back(new Object("OBJ\\treeN.obj", vec3(0, 2, 0), 0, vec3(1, 1, 1), 2, Obj[0]));
+	interObj.push_back(new TexObject("OBJ\\treeN.obj", vec3(5, 2, 0), 0, vec3(1, 1, 1), 2, Obj[0], "OBJ\\tree_UVmap.png"));
 //	interObj.push_back(new Object("OBJ\\treeN.obj", vec3(0.5, 3, 0.5), 0, vec3(1, 1, 0), 2, Obj[1]));
 }
 
@@ -190,14 +192,14 @@ void draw(void)
 	glLoadIdentity();
 
 	//카메라 위치 조명
-
+	GLfloat light_position[] = { 0.0, 10.0, 0.0, 1.0 };
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 	//glDisable(GL_LIGHT0);
 	player->drawPlayer();
 
 	gluLookAt(camPos[0], camPos[1], camPos[2], camPos[0] + camDirection[0], camPos[1] + camDirection[1], camPos[2] + camDirection[2], camUp[0], camUp[1], camUp[2]);
 	draw_axis();
-	GLfloat light_position[] = { 0.0, 10.0, 0.0, 1.0 };
-	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
 	drawText();
 
 	//drawObject

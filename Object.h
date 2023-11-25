@@ -44,7 +44,6 @@ class Object
 public:
 	int name;
 	int type; //0: 상호작용 X, 1: 위치 변경 O, 2: Color 변경 O, 3: 위치 & Color 변경 O
-	GLuint texName;
 
 public:
 	double rot; //오브젝트 회전값
@@ -53,51 +52,41 @@ public:
 
 public:
 	vector<Face*> _faces;
-	vector<Vertex*> _vertices;
-
-	vector<Vertex*> _Tvertices;
 	vector<Face*> _Tfaces;
+	vector<Vertex*> _vertices;
+	vector<Vertex*> _Tvertices;
+
 public:
 	Object* pairObject;
 
 public:
-	Object(const char* fileName, const char* texFile, vec3 _pos, double _rot, vec3 _color, int _type)
+
+	Object()
+	{
+	}
+
+	Object(const char* fileName,  vec3 _pos, double _rot, vec3 _color, int _type)
 	{
 		type = _type;
 		pos = _pos;
 		rot = _rot;
 		color = _color;
 
-		texInit(texFile);
 		loadObj(fileName);
 	}
 
-	Object(const char* fileName, const char* texFile, vec3 _pos, double _rot, vec3 _color, int _type, Object* _pairObject)
+	Object(const char* fileName, vec3 _pos, double _rot, vec3 _color, int _type, Object* _pairObject)
 	{
 		type = _type;
 		pos = _pos;
 		rot = _rot;
 		color = _color;
 		pairObject = _pairObject;
-
-		texInit(texFile);
 		loadObj(fileName);
 	}
-	~Object();
 
-	void texInit(const char* texFile)
+	~Object()
 	{
-		glGenTextures(1, &texName);
-		int imgWidth, imgHeight, channels;
-		glBindTexture(GL_TEXTURE_2D, texName);
-
-		uchar* img = readImageData(texFile, &imgWidth, &imgHeight, &channels);
-		
-		glTexImage2D(GL_TEXTURE_2D, 0, 3, imgWidth, imgHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, img);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	}
 
 	void loadObj(const char* filename)
@@ -158,18 +147,14 @@ public:
 		fclose(fp);
 	}
 
-	void drawObj(void)
+	virtual void drawObj(void)
 	{
 		glColor3f(color[0], color[1], color[2]);
-		if (_Tvertices.size() != 0)
-			glBindTexture(GL_TEXTURE_2D, this->texName);
 
 		for (int i = 0; i < _faces.size(); i++) {
 			glBegin(GL_POLYGON);
 			glNormal3f(_faces[i]->normal.x(), _faces[i]->normal.y(), _faces[i]->normal.z());
 			for (int j = 0; j < 3; j++) {
-				if (_Tvertices.size() != 0)
-					glTexCoord2f(_Tfaces[i]->v[j]->pos[0], _Tfaces[i]->v[j]->pos[1]);
 				glVertex3f(_faces[i]->v[j]->pos.x(), _faces[i]->v[j]->pos.y(), _faces[i]->v[j]->pos.z());
 
 				//printf("%d/%d ",  _faces[i]->v[j]->index + 1, _Tfaces[i]->v[j]->index + 1);
