@@ -22,13 +22,13 @@ public:
 
 		vec3 handPos = *pos + *camDirection * 2 + vec3(4,-4,3);
 		vec3 brushPos = handPos + *camDirection * 0.5;
-		hand = new Object("OBJ\\treeN.obj", handPos, -35, vec3(1, 0, 0), 0);
-		brush = new Object("OBJ\\treeN.obj", brushPos , 0, vec3(1, 1, 1), 0);
+		//hand = new Object("OBJ\\cube1.obj", handPos, -35, vec3(1, 0, 0), 0);
+		//brush = new Object("OBJ\\cube1.obj", brushPos , 0, vec3(1, 1, 1), 0);
 	}
 
 	~Player();
 
-	void drawPlayer() //player 손 darw, 함수 내에서 state에 따라 brush도 그리기
+	void drawPlayer() //player 손 draw, 함수 내에서 state에 따라 brush도 그리기
 	{
 
 		glPushMatrix();

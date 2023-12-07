@@ -38,16 +38,21 @@ public:
 
 	void drawObj(void)
 	{
+		//texture
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);	//polygon의 원래 색상은 무시하고 texture로 덮음
+		glEnable(GL_TEXTURE_2D);
+
 		glColor3f(color[0], color[1], color[2]);
 		if (_Tvertices.size() != 0)
 			glBindTexture(GL_TEXTURE_2D, this->texName);
 
 		for (int i = 0; i < _faces.size(); i++) {
 			glBegin(GL_POLYGON);
-			glNormal3f(_faces[i]->normal.x(), _faces[i]->normal.y(), _faces[i]->normal.z());
+			
 			for (int j = 0; j < 3; j++) {
+				glNormal3f(_Nfaces[i]->v[j]->pos.x(), _faces[i]->v[j]->pos.y(), _faces[i]->v[j]->pos.z());
 				if (_Tvertices.size() != 0)
-					glTexCoord2f(_Tfaces[i]->v[j]->pos[0], _Tfaces[i]->v[j]->pos[1]);
+					glTexCoord2d(_Tfaces[i]->v[j]->pos.x(), _Tfaces[i]->v[j]->pos.y());
 				glVertex3f(_faces[i]->v[j]->pos.x(), _faces[i]->v[j]->pos.y(), _faces[i]->v[j]->pos.z());
 
 				//printf("%d/%d ",  _faces[i]->v[j]->index + 1, _Tfaces[i]->v[j]->index + 1);

@@ -39,21 +39,28 @@ bool isPicking = false;
 void objectInit(void)
 {
 	//Uninteractable Object
-	Obj.push_back(new TexObject("OBJ\\treeN.obj", vec3(0, 2, 0), 0, vec3(1, 1, 1), 0, "OBJ\\tree_UVmap.bmp"));
-	//Obj.push_back(new Object("OBJ\\treeN.obj", vec3(5, 0, 5), 0, vec3(0, 1, 0), 0));
+	//Obj.push_back(new TexObject("OBJ\\tree.obj", vec3(0, 2, 0), 0, vec3(1, 1, 1), 0, "OBJ\\tree_UVmap.bmp"));
+	//Obj.push_back(new Object("OBJ\\snowman_total.obj", vec3(2, 1, 2), 0, vec3(1, 1, 1), 0));
+
+	Obj.push_back(new Object("OBJ\\cube.obj", vec3(0, 3.60, 0), 0, vec3(1, 1, 1), 0));
+	//Obj.push_back(new TexObject("OBJ\\cube2.obj", vec3(5, 1.5, 5), 0, vec3(1, 1, 1), 0, "OBJ\\cube2.bmp"));
+	/*Obj.push_back(new TexObject("OBJ\\snowman_top3.obj", vec3(5, 2, 5), 0, vec3(1, 1, 1), 0, "OBJ\\snowman_T_UVmap3.bmp"));
+	Obj.push_back(new Object("OBJ\\snowman_hat.obj", vec3(5, 2.5, 5), 0, vec3(0, 0, 0), 0));*/
+	//Obj.push_back(new Object("OBJ\\tree.obj", vec3(5, 0, 5), 0, vec3(0, 1, 0), 0));
 
 	//Interactable Object
-	interObj.push_back(new Object("OBJ\\treeN.obj", vec3(0, 2, 0), 0, vec3(1, 1, 1), 2, Obj[0]));
-	interObj.push_back(new TexObject("OBJ\\treeN.obj", vec3(5, 2, 0), 0, vec3(1, 1, 1), 2, Obj[0], "OBJ\\tree_UVmap.png"));
-//	interObj.push_back(new Object("OBJ\\treeN.obj", vec3(0.5, 3, 0.5), 0, vec3(1, 1, 0), 2, Obj[1]));
+	interObj.push_back(new TexObject("OBJ\\cube1.obj", vec3(0, 1.5, 0), 0, vec3(1, 1, 1), 2, Obj[0], "OBJ\\asd22.bmp"));
+	//interObj.push_back(new Object("OBJ\\tree.obj", vec3(5, 2, 5), 0, vec3(1, 1, 1), 2, Obj[0]));
+	//interObj.push_back(new TexObject("OBJ\\tree.obj", vec3(5, 2, 0), 0, vec3(1, 1, 1), 2, Obj[0], "OBJ\\tree_UVmap.png"));
+//	interObj.push_back(new Object("OBJ\\tree.obj", vec3(0.5, 3, 0.5), 0, vec3(1, 1, 0), 2, Obj[1]));
 }
 
 void lightInit(void)
 {
 	// 0번 조명 관련 설정
-	GLfloat light_ambient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+	GLfloat light_ambient[] = { 0.5f, 0.5f, 0.5f, 1.0f };
 	GLfloat light_diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	GLfloat light_specular[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+	GLfloat light_specular[] = { 0.7f, 0.7f, 0.7f, 1.0f };
 
 	glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
@@ -64,14 +71,14 @@ void lightInit(void)
 	glEnable(GL_LIGHT0);
 
 	//재질 반사 특성 설정 init()에 추가
-	GLfloat ambientMat[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+	GLfloat ambientMat[] = { 0.5f, 0.5f, 0.5f, 1.0f };
 	GLfloat diffuseMat[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	GLfloat specularMat[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+	GLfloat specularMat[] = { 0.7f, 0.7f, 0.7f, 1.0f };
 
 	glMaterialfv(GL_FRONT, GL_AMBIENT, ambientMat);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseMat);
-	glMaterialfv(GL_FRONT, GL_SPECULAR, specularMat);
-	glMaterialf(GL_FRONT, GL_SHININESS, 128);
+	//glMaterialfv(GL_FRONT, GL_SPECULAR, specularMat);
+	//glMaterialf(GL_FRONT, GL_SHININESS, 128);
 
 	////color_material
 	glEnable(GL_COLOR_MATERIAL);
@@ -91,9 +98,6 @@ void init(void)
 
 	lightInit();
 
-	//texture
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);	//polygon의 원래 색상은 무시하고 texture로 덮음
-	glEnable(GL_TEXTURE_2D);
 
 	player = new Player(0, &camPos, &camDirection);
 	objectInit();
@@ -195,7 +199,7 @@ void draw(void)
 	GLfloat light_position[] = { 0.0, 10.0, 0.0, 1.0 };
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 	//glDisable(GL_LIGHT0);
-	player->drawPlayer();
+	//player->drawPlayer();
 
 	gluLookAt(camPos[0], camPos[1], camPos[2], camPos[0] + camDirection[0], camPos[1] + camDirection[1], camPos[2] + camDirection[2], camUp[0], camUp[1], camUp[2]);
 	draw_axis();
@@ -227,8 +231,8 @@ void idle(void)
 			i++;
 		}
 	}
-	if (i == 2)
-		printf("clear\n");
+	/*if (i == 2)
+		printf("clear\n");*/
 }
 
 void pickingEvent()
@@ -316,7 +320,7 @@ void resize(int width, int height)
 
 void keyboard(unsigned char key, int x, int y)
 {
-	double cameraSpeed = 2.0f;
+	double cameraSpeed = 0.7f;
 	Vec3<double> cameraV = camDirection.cross(camUp); //카메라 uvn 좌표계 중, v축 방향
 
 	if (key == 'w') //n 방향으로 이동, y축 방향 이동 x
