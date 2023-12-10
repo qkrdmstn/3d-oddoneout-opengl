@@ -39,6 +39,7 @@ GameManager* gm;
 int curColor = -1;
 bool isPicking = false;
 
+double startT;
 
 void objectInit(void)
 {
@@ -242,25 +243,65 @@ void draw_string(void* font, const char* str, float x_position, float y_position
 }
 
 void drawText() {
-	if (player->state == 2 && curColor != -1 )
+	if (gm->curState == 0)
 	{
-		string R = "R: " + to_string(player->brush->color.x());
-		string G = "G: " + to_string(player->brush->color.y());
-		string B = "B: " + to_string(player->brush->color.z());
-
-		char* strR = const_cast<char*>((R).c_str());
-		char* strG = const_cast<char*>((G).c_str());
-		char* strB = const_cast<char*>((B).c_str());
-		vec3 color(player->brush->color.x(), player->brush->color.y(), player->brush->color.z());
-		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strR, -9.8, -8.2, color.x(), color.y(), color.z());
-		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strG, -9.8, -8.9, color.x(), color.y(), color.z());
-		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strB, -9.8, -9.6, color.x(), color.y(), color.z());
-
+		string tutorial = "Press any key to start the game";
+		char* Ctutorial = const_cast<char*>((tutorial).c_str());
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, Ctutorial, -2.5, -2, 0,0,0);
 	}
+	else if (gm->curState == 1)
+	{
+		if (player->state == 2 && curColor != -1)
+		{
+			string R = "R: " + to_string(player->brush->color.x());
+			string G = "G: " + to_string(player->brush->color.y());
+			string B = "B: " + to_string(player->brush->color.z());
 
-	string diff = "Differences: " + to_string(gm->differenece);
-	char* strDiff = const_cast<char*>((diff).c_str());
-	draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strDiff , -9.8, 9.4, 1,1,1);
+			char* strR = const_cast<char*>((R).c_str());
+			char* strG = const_cast<char*>((G).c_str());
+			char* strB = const_cast<char*>((B).c_str());
+			vec3 color(player->brush->color.x(), player->brush->color.y(), player->brush->color.z());
+			draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strR, -9.8, -8.2, color.x(), color.y(), color.z());
+			draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strG, -9.8, -8.9, color.x(), color.y(), color.z());
+			draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strB, -9.8, -9.6, color.x(), color.y(), color.z());
+
+		}
+
+		string diff = "Differences: " + to_string(gm->differenece);
+		char* strDiff = const_cast<char*>((diff).c_str());
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strDiff, -9.8, 9.4, 1, 1, 1);
+
+		int intTime = gm->timer; //내림
+		int floatTime = (gm->timer - intTime) * 100; //소수점 아래 둘째자리
+		string time = "Timer: " + to_string(intTime) + "." + to_string(floatTime);
+		char* strTime = const_cast<char*>((time).c_str());
+		if (gm->timer < 30)
+		{
+			double delta = gm->timer / 30.0f;
+			draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strTime, -1, 9.4, 1, 1 * delta, 1 * delta);
+
+		}
+		else
+			draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strTime, -1, 9.4, 1, 1, 1);
+	}
+	else if (gm->curState == 2)
+	{
+		string Clear = "Game Clear!!!";
+		string Restart = "Press any key to Restart the game";
+		char* strClear = const_cast<char*>((Clear).c_str());
+		char* strRestart = const_cast<char*>((Restart).c_str());
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strClear, -2.5, -1.5, 0, 0, 0);
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strRestart, -2.5, -2, 0, 0, 0);
+	}
+	else if (gm->curState == 3)
+	{
+		string Over = "Game Over!!!";
+		string Restart = "Press any key to Restart the game";
+		char* strOver = const_cast<char*>((Over).c_str());
+		char* strRestart = const_cast<char*>((Restart).c_str());
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strOver, -2.5, -1.5, 0, 0, 0);
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strRestart, -2.5, -2, 0, 0, 0);
+	}
 }
 
 void draw(void)
@@ -291,12 +332,6 @@ void draw(void)
 
 	drawInterObject(); 	draw_axis();
 
-	//drawObject
-	glPushMatrix();
-	glTranslatef(7.65, 0, 0); //<보기>맵 local 좌표
-  	//draw_axis();
-	glPopMatrix();
-
 	glutPostRedisplay();
 	glFlush();
 	glutSwapBuffers();
@@ -304,15 +339,38 @@ void draw(void)
 
 void idle(void)
 {
-	int i = 0;
-	for (auto interObj: interObj)
+	if (gm->curState == 1)
 	{
-		if (!interObj->isCorrect())
+		//정답 확인
+		int i = 0;
+		for (auto interObj : interObj)
 		{
-			i++;
+			if (!interObj->isCorrect())
+			{
+				i++;
+			}
+		}
+		gm->differenece = i;
+		if (gm->differenece == 0)
+		{
+			gm->GameClear();
+			gm->curState = 2;
+		}
+
+		//제한시간
+		int timeSinceStart = glutGet(GLUT_ELAPSED_TIME);
+		int deltaTime = timeSinceStart - startT;
+		startT = timeSinceStart;
+
+		if (gm->timer > 0)
+			gm->timer -= deltaTime * 0.001;
+		else
+		{
+			gm->timer = 0.0f;
+			gm->GameOver();
+			gm->curState = 3;
 		}
 	}
-	gm->differenece = i;
 }
 
 void pickingEvent()
@@ -400,156 +458,187 @@ void resize(int width, int height)
 
 void keyboard(unsigned char key, int x, int y)
 {
-	double cameraSpeed = 0.7f;
-	Vec3<double> cameraV = camDirection.cross(camUp); //카메라 uvn 좌표계 중, v축 방향
-
-	if (key == 'w') //n 방향으로 이동, y축 방향 이동 x
+	if (gm->curState == 1)
 	{
-		camPos[0] += camDirection[0] * cameraSpeed;
-		camPos[2] += camDirection[2] * cameraSpeed;
-		if (isPicking)
+		//player 이동
+		double cameraSpeed = 0.7f;
+		Vec3<double> cameraV = camDirection.cross(camUp); //카메라 uvn 좌표계 중, v축 방향
+
+		if (key == 'w') //n 방향으로 이동, y축 방향 이동 x
 		{
-			focusedObj->pos[0] += camDirection[0] * cameraSpeed;
-			focusedObj->pos[2] += camDirection[2] * cameraSpeed;
+			camPos[0] += camDirection[0] * cameraSpeed;
+			camPos[2] += camDirection[2] * cameraSpeed;
+			if (isPicking)
+			{
+				focusedObj->pos[0] += camDirection[0] * cameraSpeed;
+				focusedObj->pos[2] += camDirection[2] * cameraSpeed;
+			}
+		}
+		else if (key == 's')
+		{
+			camPos[0] -= camDirection[0] * cameraSpeed;
+			camPos[2] -= camDirection[2] * cameraSpeed;
+			if (isPicking)
+			{
+				focusedObj->pos[0] -= camDirection[0] * cameraSpeed;
+				focusedObj->pos[2] -= camDirection[2] * cameraSpeed;
+			}
+		}
+
+		if (key == 'd') //v 방향으로 이동
+		{
+			camPos[0] += cameraV[0] * cameraSpeed;
+			camPos[2] += cameraV[2] * cameraSpeed;
+			if (isPicking)
+			{
+				focusedObj->pos[0] += cameraV[0] * cameraSpeed;
+				focusedObj->pos[2] += cameraV[2] * cameraSpeed;
+			}
+		}
+		else if (key == 'a')
+		{
+			camPos[0] -= cameraV[0] * cameraSpeed;
+			camPos[2] -= cameraV[2] * cameraSpeed;
+			if (isPicking)
+			{
+				focusedObj->pos[0] -= cameraV[0] * cameraSpeed;
+				focusedObj->pos[2] -= cameraV[2] * cameraSpeed;
+			}
+		}
+
+		if (key == '1') //mode 변경
+		{
+			player->state = 1;
+			printf("player is Picking Mode\n");
+		}
+		else if (key == '2')
+		{
+			player->state = 2;
+			printf("player is Color Mode\n");
 		}
 	}
-	else if (key == 's')
+	else 
 	{
-		camPos[0] -= camDirection[0] * cameraSpeed;
-		camPos[2] -= camDirection[2] * cameraSpeed;
-		if (isPicking)
+		if (gm->curState == 2 || gm->curState == 3)
 		{
-			focusedObj->pos[0] -= camDirection[0] * cameraSpeed;
-			focusedObj->pos[2] -= camDirection[2] * cameraSpeed;
-		}
-	}
+			for (auto Obj: interObj)
+			{
+				Obj->~Object();
+			}
+			for (auto Obj : Obj)
+			{
+				Obj->~Object();
+			}
+			interObj.clear();
+			Obj.clear();
 
-	if (key == 'd') //v 방향으로 이동
-	{
-		camPos[0] += cameraV[0] * cameraSpeed;
-		camPos[2] += cameraV[2] * cameraSpeed;
-		if (isPicking)
-		{
-			focusedObj->pos[0] += cameraV[0] * cameraSpeed;
-			focusedObj->pos[2] += cameraV[2] * cameraSpeed;
+			objectInit();
+			printf("restart\n");
 		}
-	}
-	else if (key == 'a') 
-	{
-		camPos[0] -= cameraV[0] * cameraSpeed;
-		camPos[2] -= cameraV[2] * cameraSpeed;
-		if (isPicking)
-		{
-			focusedObj->pos[0] -= cameraV[0] * cameraSpeed;
-			focusedObj->pos[2] -= cameraV[2] * cameraSpeed;
-		}
-	}
-
-
-	if (key == '1')
-	{
-		player->state = 1;
-		printf("player is Picking Mode\n");
-	}	
-	else if (key == '2')
-	{
-		player->state = 2;
-		printf("player is Color Mode\n");
+		gm->curState = 1;
+		startT = glutGet(GLUT_ELAPSED_TIME);
+		gm->timer = gm->limitTime;
 	}
 }
 
 void mouse(int button, int state, int x, int y) 
 {
-	if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
+	if (gm->curState == 1)
 	{
-		rightDown = true;
-		firstDown = true;
-	}
-	else if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP)
-	{
-		rightDown = false;
-	}
-	else if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
-	{
-		y = g_nGLHeight - y;
-		picking(x, y);
-	}
-	else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
-	{
-		isPicking = false;
+		if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
+		{
+			rightDown = true;
+			firstDown = true;
+		}
+		else if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP)
+		{
+			rightDown = false;
+		}
+		else if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+		{
+			y = g_nGLHeight - y;
+			picking(x, y);
+		}
+		else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
+		{
+			isPicking = false;
+		}
 	}
 }
 
 void motion(int x, int y) 
 {
-	//mouse 움직임에 따른 카메라 회전
-	if (rightDown) 
+	if (gm->curState == 1)
 	{
-		if (firstDown)
+		//mouse 움직임에 따른 카메라 회전
+		if (rightDown)
 		{
-			lastPos[0] = x;
-			lastPos[1] = y;
-			firstDown = false;
+			if (firstDown)
+			{
+				lastPos[0] = x;
+				lastPos[1] = y;
+				firstDown = false;
+			}
+			else
+			{
+				lastPos[0] = curPos[0];
+				lastPos[1] = curPos[1];
+			}
+
+			curPos[0] = x;
+			curPos[1] = y;
+
+			double deltaX = (curPos[0] - lastPos[0]) / (double)g_nGLWidth;
+			double deltaY = (lastPos[1] - curPos[1]) / (double)g_nGLWidth;
+
+			phi += (180 * deltaX);
+			theta += (180 * deltaY);
+
+			if (theta > 90)
+				theta = 90;
+			else if (theta < -90)
+				theta = -90;
+
+			Vec3<double> front;
+			front[0] = cos(phi * pi / 180) * cos(theta * pi / 180);
+			front[1] = sin(theta * pi / 180);
+			front[2] = cos(theta * pi / 180) * sin(phi * pi / 180);
+			front.normalize();
+
+			camDirection = front;
 		}
-		else
+
+		if (isPicking)
 		{
-			lastPos[0] = curPos[0];
-			lastPos[1] = curPos[1];
+			GLint viewport[4];
+			GLdouble modelview[16];
+			GLdouble projection[16];
+			GLfloat winX, winY, winZ;
+			GLdouble posX, posY, posZ;
+
+			glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+			glGetDoublev(GL_PROJECTION_MATRIX, projection);
+			glGetIntegerv(GL_VIEWPORT, viewport);
+
+			winX = (float)x;
+			winY = (float)viewport[3] - (float)y;
+			glReadPixels(x, int(winY), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ);
+
+			gluUnProject(winX, winY, winZ, modelview, projection, viewport, &posX, &posY, &posZ);
+			//printf("x: %f, y: %f, z: %f\n", posX, posY, posZ);
+
+			vec3 clickPos(posX, posY, posZ);
+			vec3 normalPos = (clickPos - camPos); //카메라-마우스 클릭 좌표 방향벡터
+			normalPos.normalize();
+
+			double dist = (camPos - focusedObj->pos).length(); //움직일 때, 원래의 거리를 유지
+			vec3 objPos = camPos + normalPos * dist;
+
+			focusedObj->pos.set(objPos);
+			//printf("%f, %f, %f    %f\n", focusedObj->pos.x(), focusedObj->pos.y(), focusedObj->pos.z(), focusedObj->rot);
 		}
-
-		curPos[0] = x;
-		curPos[1] = y;
-
-		double deltaX = (curPos[0] - lastPos[0]) / (double)g_nGLWidth;
-		double deltaY = (lastPos[1] - curPos[1]) / (double)g_nGLWidth;
-
-		phi += (180 * deltaX);
-		theta += (180 * deltaY);
-
-		if (theta > 90)
-			theta = 90;
-		else if (theta < -90)
-			theta = -90;
-
-		Vec3<double> front;
-		front[0] = cos(phi * pi / 180) * cos(theta * pi / 180);
-		front[1] = sin(theta * pi / 180);
-		front[2] = cos(theta * pi / 180) * sin(phi * pi / 180);
-		front.normalize();
-
-		camDirection = front;
 	}
 
-	if (isPicking)
-	{
-		GLint viewport[4];
-		GLdouble modelview[16];
-		GLdouble projection[16];
-		GLfloat winX, winY, winZ;
-		GLdouble posX, posY, posZ;
-
-		glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
-		glGetDoublev(GL_PROJECTION_MATRIX, projection);
-		glGetIntegerv(GL_VIEWPORT, viewport);
-
-		winX = (float)x;
-		winY = (float)viewport[3] - (float)y;
-		glReadPixels(x, int(winY), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ);
-
-		gluUnProject(winX, winY, winZ, modelview, projection, viewport, &posX, &posY, &posZ);
-		//printf("x: %f, y: %f, z: %f\n", posX, posY, posZ);
-
-		vec3 clickPos(posX, posY, posZ);
-		vec3 normalPos = (clickPos - camPos); //카메라-마우스 클릭 좌표 방향벡터
-		normalPos.normalize();
-
-		double dist = (camPos-focusedObj->pos).length(); //움직일 때, 원래의 거리를 유지
-		vec3 objPos = camPos + normalPos * dist;
-
-		focusedObj->pos.set(objPos);
-		printf("%f, %f, %f    %f\n", focusedObj->pos.x(), focusedObj->pos.y(), focusedObj->pos.z(), focusedObj->rot);
-
-	}
 }
 
 void colorModeWheelInput(int direction)
@@ -616,11 +705,6 @@ void pickModeWheelInput(int direction)
 		if (focusedObj->rot > 360)
 			focusedObj->rot -= 360;
 	}
-
-}
-
-void specialkeyboard(int key, int x, int y)
-{
 
 }
 
@@ -704,7 +788,6 @@ int main(int argc, char ** argv)
 	glutMouseFunc(mouse);
 	glutMouseWheelFunc(mouse_wheel);
 	glutMotionFunc(motion); //마우스 버튼 클릭한 채 이동
-	glutSpecialFunc(specialkeyboard);
 	glutKeyboardFunc(keyboard);
 	glutIdleFunc(idle);
 	//glutEntryFunc(entry); //window 포커스 감지
