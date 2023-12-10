@@ -9,6 +9,7 @@
 #include "Object.h"
 #include "TexObject.h"
 #include "Player.h"
+#include "GameManager.h"
 
 int g_nGLWidth = 1200, g_nGLHeight = 675;
 
@@ -32,6 +33,7 @@ Object* field;
 
 Object* focusedObj;
 Player* player;
+GameManager* gm;
 
 //picking & selection
 int curColor = -1;
@@ -60,16 +62,16 @@ void objectInit(void)
 	//box
 	Obj.push_back(new TexObject("OBJ\\Box3.obj", vec3(2.275, 0.2, 5.5), 25, vec3(1, 1, 1), 0, "OBJ\\BoxRY_UVmap.bmp"));
 	Obj.push_back(new TexObject("OBJ\\Box2.obj", vec3(2.575, 0.2, 6.2), 0, vec3(1, 1, 1), 0, "OBJ\\BoxYR_UVmap.bmp"));
-	Obj.push_back(new TexObject("OBJ\\Box4.obj", vec3(3.075, 0.2, 6.9), 60, vec3(1, 1, 1), 0, "OBJ\\BoxRY_UVmap.bmp"));
-	Obj.push_back(new TexObject("OBJ\\Box6.obj", vec3(4.675, 0.2, 6.9), 100, vec3(1, 1, 1), 0, "OBJ\\BoxRG_UVmap.bmp"));
-	Obj.push_back(new TexObject("OBJ\\Box1.obj", vec3(5.275, 0.2, 6.2), 20, vec3(1, 1, 1), 0, "OBJ\\BoxRY_UVmap.bmp"));
-	Obj.push_back(new TexObject("OBJ\\Box5.obj", vec3(5.5, 0.2, 5.5), 45, vec3(1, 1, 1), 0, "OBJ\\BoxGR_UVmap.bmp"));
-
+	Obj.push_back(new TexObject("OBJ\\Box5.obj", vec3(3.075, 0.2, 6.9), 45, vec3(1, 1, 1), 0, "OBJ\\BoxGR_UVmap.bmp"));
+	Obj.push_back(new TexObject("OBJ\\Box6.obj", vec3(4.675, 0.4, 6.9), 100, vec3(1, 1, 1), 0, "OBJ\\BoxRG_UVmap.bmp"));
+	Obj.push_back(new TexObject("OBJ\\Box1.obj", vec3(5.175, 0.2, 6.3), 20, vec3(1, 1, 1), 0, "OBJ\\BoxRY_UVmap.bmp"));
+	Obj.push_back(new TexObject("OBJ\\Box4.obj", vec3(5.5, 0.2, 5.5), 60, vec3(1, 1, 1), 0, "OBJ\\BoxRY_UVmap.bmp"));
+	
 	//snowman
 	Obj.push_back(new TexObject("OBJ\\snowB.obj", vec3(6.5, 0.2, 2.3), 0, vec3(1, 1, 1), 0, "OBJ\\snowB_UVmap.bmp"));
 	Obj.push_back(new TexObject("OBJ\\snowM.obj", vec3(6.5, 0.8, 2.3), 0, vec3(1, 1, 1), 0, "OBJ\\snowM_UVmap.bmp"));
 	Obj.push_back(new TexObject("OBJ\\snowT.obj", vec3(6.5, 1.3, 2.3), 0, vec3(1, 1, 1), 0, "OBJ\\snowT_UVmap.bmp"));
-	Obj.push_back(new Object("OBJ\\snowHat.obj", vec3(6.5, 1.8, 2.3), 0, vec3(0,0,0), 0));
+	Obj.push_back(new Object("OBJ\\snowHat.obj", vec3(6.5, 1.8, 2.3), 0, vec3(0.5, 0.5, 0.5), 0));
 
 	//etc
 	Obj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.4, 3.25), 0, vec3(1, 1, 1), 0, "OBJ\\sock_UVmap1.bmp"));
@@ -78,61 +80,45 @@ void objectInit(void)
 	Obj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.25, 5.550), 0, vec3(1, 1, 1), 0, "OBJ\\sock_UVmap4.bmp"));
 	Obj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.45, 6.35), 0, vec3(1, 1, 1), 0, "OBJ\\sock_UVmap5.bmp"));
 	Obj.push_back(new TexObject("OBJ\\santaHat.obj", vec3(3.875, 1.6, 0.65), 70, vec3(1, 1, 1), 0, "OBJ\\santaHat_UVmap.bmp"));
+	Obj.push_back(new TexObject("OBJ\\candy.obj", vec3(4.45, 1.4, 6.275), 10, vec3(1, 1, 1), 0, "OBJ\\candy_UVmap.bmp"));
 
 
 	//Interactable Object
 	//tree
 	interObj.push_back(new TexObject("OBJ\\tree.obj", vec3(3.875, 1.5, 5.375), 0, vec3(1, 1, 1), 0, Obj[0], "OBJ\\tree_UVmap.bmp"));
-	interObj.push_back(new Object("OBJ\\star.obj", vec3(3.885, 4.08, 5.39), 0, vec3(1, 1, 0), 3, Obj[1]));
+	interObj.push_back(new Object("OBJ\\star.obj", vec3(3.81, 1.85, 0.63), 0, vec3(1, 0, 0), 3, Obj[1]));
 
-	interObj.push_back(new Object("OBJ\\ball.obj", vec3(3.605, 3.2, 5.455), 0, vec3(1, 1, 0), 3, Obj[2]));
+	interObj.push_back(new Object("OBJ\\ball.obj", vec3(3.605, 3.2, 5.455), 0, vec3(1, 0.3, 0.1), 3, Obj[2]));
 	interObj.push_back(new Object("OBJ\\ball.obj", vec3(4.355, 2.7, 5.705), 0, vec3(1, 0.2, 0.2), 3, Obj[3]));
-	interObj.push_back(new Object("OBJ\\ball.obj", vec3(3.885, 2.3, 4.730), 0, vec3(0, 0.5, 0.2), 3, Obj[4]));
+	interObj.push_back(new Object("OBJ\\ball.obj", vec3(3.885, 2.3, 4.730), 0, vec3(1, 1, 1), 3, Obj[4]));
 	interObj.push_back(new Object("OBJ\\ball.obj", vec3(3.155, 2.0, 5.455), 0, vec3(0.2, 0.2, 1), 3, Obj[5]));
 	interObj.push_back(new Object("OBJ\\ball.obj", vec3(3.885, 1.7, 6.255), 0, vec3(0.5, 0.5, 1), 3, Obj[6]));
-	interObj.push_back(new Object("OBJ\\ball.obj", vec3(4.885, 1.4, 5.255), 0, vec3(1, 1, 1), 3, Obj[7]));
-	interObj.push_back(new Object("OBJ\\ball.obj", vec3(3.885, 1.2, 4.255), 0, vec3(1, 0.3, 0.1), 3, Obj[8]));
-	interObj.push_back(new Object("OBJ\\ball.obj", vec3(2.785, 0.85, 5.655), 0, vec3(0.4, 0, 0.8), 3, Obj[9]));
+	interObj.push_back(new Object("OBJ\\ball.obj", vec3(4.885, 1.4, 5.255), 0, vec3(0.2, 0.0, 0.8), 3, Obj[7]));
+	interObj.push_back(new Object("OBJ\\ball.obj", vec3(3.885, 1.2, 4.255), 0, vec3(0.2, 1, 0), 3, Obj[8]));
+	interObj.push_back(new Object("OBJ\\ball.obj", vec3(2.785, 0.85, 5.655), 0, vec3(0.1, 0.6, 1.0), 3, Obj[9]));
 
 	//box
-	interObj.push_back(new TexObject("OBJ\\Box3.obj", vec3(2.275, 0.2, 5.5), 25, vec3(1, 1, 1), 3, Obj[10], "OBJ\\BoxRY_UVmap.bmp"));
-	interObj.push_back(new TexObject("OBJ\\Box2.obj", vec3(2.575, 0.2, 6.2), 0, vec3(1, 1, 1), 3, Obj[11], "OBJ\\BoxYR_UVmap.bmp"));
-	interObj.push_back(new TexObject("OBJ\\Box4.obj", vec3(3.075, 0.2, 6.9), 60, vec3(1, 1, 1), 3, Obj[12], "OBJ\\BoxRY_UVmap.bmp"));
-	interObj.push_back(new TexObject("OBJ\\Box6.obj", vec3(4.675, 0.2, 6.9), 100, vec3(1, 1, 1), 3, Obj[13], "OBJ\\BoxRG_UVmap.bmp"));
+	interObj.push_back(new TexObject("OBJ\\Box3.obj", vec3(2.275, 0.2, 5.5), 0, vec3(1, 1, 1), 3, Obj[10], "OBJ\\BoxRY_UVmap.bmp"));
+	interObj.push_back(new TexObject("OBJ\\Box2.obj", vec3(4.84, 0.2, 6.86), 0, vec3(1, 1, 1), 3, Obj[11], "OBJ\\BoxYR_UVmap.bmp"));
+	interObj.push_back(new TexObject("OBJ\\Box5.obj", vec3(5.671705, 0.2, 5.016742), 5, vec3(1, 1, 1), 3, Obj[12], "OBJ\\BoxGR_UVmap.bmp"));
+	interObj.push_back(new TexObject("OBJ\\Box6.obj", vec3(2.70, 0.4, 6.36), 90, vec3(1, 1, 1), 3, Obj[13], "OBJ\\BoxRG_UVmap.bmp"));
 	interObj.push_back(new TexObject("OBJ\\Box1.obj", vec3(5.275, 0.2, 6.2), 20, vec3(1, 1, 1), 3, Obj[14], "OBJ\\BoxGR_UVmap.bmp"));
-	interObj.push_back(new TexObject("OBJ\\Box5.obj", vec3(5.5, 0.2, 5.5), 45, vec3(1, 1, 1), 3, Obj[15], "OBJ\\BoxGR_UVmap.bmp"));
+	interObj.push_back(new TexObject("OBJ\\Box4.obj", vec3(3.45, 0.2, 6.85), 180, vec3(1, 1, 1), 3, Obj[15], "OBJ\\BoxRY_UVmap.bmp"));
 
 	//snowman
-	interObj.push_back(new TexObject("OBJ\\snowB.obj", vec3(6.5, 0.2, 2.3), 0, vec3(1, 1, 1), 3, Obj[16], "OBJ\\snowB_UVmap.bmp"));
-	interObj.push_back(new TexObject("OBJ\\snowM.obj", vec3(6.5, 0.8, 2.3), 0, vec3(1, 1, 1), 3, Obj[17], "OBJ\\snowM_UVmap.bmp"));
-	interObj.push_back(new TexObject("OBJ\\snowT.obj", vec3(6.5, 1.3, 2.3), 0, vec3(1, 1, 1), 3, Obj[18], "OBJ\\snowT_UVmap.bmp"));
-	interObj.push_back(new Object("OBJ\\snowHat.obj", vec3(6.5, 1.8, 2.3), 0, vec3(0, 0, 0), 3, Obj[19]));
+	interObj.push_back(new TexObject("OBJ\\snowB.obj", vec3(0.7, 0.3, 2.3), 90, vec3(1, 1, 1), 3, Obj[16], "OBJ\\snowB_UVmap.bmp"));
+	interObj.push_back(new TexObject("OBJ\\snowM.obj", vec3(6.5, 0.2, 2.3), 0, vec3(1, 1, 1), 3, Obj[17], "OBJ\\snowM_UVmap.bmp"));
+	interObj.push_back(new TexObject("OBJ\\snowT.obj", vec3(6.5, 0.7, 2.3), 0, vec3(1, 1, 1), 3, Obj[18], "OBJ\\snowT_UVmap.bmp"));
+	interObj.push_back(new Object("OBJ\\snowHat.obj", vec3(0.7, 1.0, 2.3), 0, vec3(0.5, 0.5, 0.5), 3, Obj[19]));
 
 	//etc
-	Obj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.4, 3.25), 0, vec3(1, 1, 1), 0, Obj[20], "OBJ\\sock_UVmap1.bmp"));
-	Obj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.25, 4.0), 0, vec3(1, 1, 1), 0, Obj[21], "OBJ\\sock_UVmap2.bmp"));
-	Obj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.15, 4.775), 0, vec3(1, 1, 1), 0, Obj[22], "OBJ\\sock_UVmap3.bmp"));
-	Obj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.25, 5.550), 0, vec3(1, 1, 1), 0, Obj[23], "OBJ\\sock_UVmap4.bmp"));
-	Obj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.45, 6.35), 0, vec3(1, 1, 1), 0, Obj[24], "OBJ\\sock_UVmap5.bmp"));
-	Obj.push_back(new TexObject("OBJ\\santaHat.obj", vec3(3.875, 1.6, 0.65), 70, vec3(1, 1, 1), 0, Obj[25], "OBJ\\santaHat_UVmap.bmp"));
-
-	//interObj.push_back(new Object("OBJ\\ball.obj", vec3(0, 1, 0), 0, vec3(1,1,1), 3));
-	//interObj.push_back(new TexObject("OBJ\\santaHat.obj", vec3(1, 1, 1), 0, vec3(1, 1, 1), 3, "OBJ\\santaHat_UVmap.bmp"));
-	//interObj.push_back(new TexObject("OBJ\\snowB.obj", vec3(2, 1, 2), 0, vec3(1, 1, 1), 3, "OBJ\\snowB_UVmap.bmp"));
-	//interObj.push_back(new Object("OBJ\\snowHat.obj", vec3(3, 1, 3), 0, vec3(1, 1, 1), 3));
-	//interObj.push_back(new TexObject("OBJ\\snowM.obj", vec3(4, 1, 4), 0, vec3(1, 1, 1), 3, "OBJ\\snowM_UVmap.bmp"));
-	//interObj.push_back(new TexObject("OBJ\\snowT.obj", vec3(5, 1, 5), 0, vec3(1, 1, 1), 3, "OBJ\\snowT_UVmap.bmp"));
-	//interObj.push_back(new TexObject("OBJ\\sock.obj", vec3(9, 1, 9), 0, vec3(1, 1, 1), 3, "OBJ\\sock_UVmap1.bmp"));
-	//interObj.push_back(new TexObject("OBJ\\sock.obj", vec3(10, 1, 10), 0, vec3(1, 1, 1), 3, "OBJ\\sock_UVmap2.bmp"));
-	//interObj.push_back(new TexObject("OBJ\\sock.obj", vec3(11, 1, 11), 0, vec3(1, 1, 1), 3, "OBJ\\sock_UVmap3.bmp"));
-	//interObj.push_back(new TexObject("OBJ\\sock.obj", vec3(12, 1, 12), 0, vec3(1, 1, 1), 3, "OBJ\\sock_UVmap4.bmp"));
-	//interObj.push_back(new TexObject("OBJ\\sock.obj", vec3(13, 1, 13), 0, vec3(1, 1, 1), 3, "OBJ\\sock_UVmap5.bmp"));
-	//interObj.push_back(new TexObject("OBJ\\Box1.obj", vec3(14, 1, 14), 0, vec3(1, 1, 1), 3, "OBJ\\BoxGR_UVmap.bmp"));
-	//interObj.push_back(new TexObject("OBJ\\Box2.obj", vec3(15, 1, 15), 0, vec3(1, 1, 1), 3, "OBJ\\BoxYR_UVmap.bmp"));
-	//interObj.push_back(new TexObject("OBJ\\Box3.obj", vec3(16, 1, 16), 0, vec3(1, 1, 1), 3, "OBJ\\BoxRY_UVmap.bmp"));
-	//interObj.push_back(new TexObject("OBJ\\Box4.obj", vec3(17, 1, 17), 0, vec3(1, 1, 1), 3, "OBJ\\BoxRY_UVmap.bmp"));
-	//interObj.push_back(new TexObject("OBJ\\Box5.obj", vec3(18, 1, 18), 0, vec3(1, 1, 1), 3, "OBJ\\BoxGR_UVmap.bmp"));
-	//interObj.push_back(new TexObject("OBJ\\Box6.obj", vec3(19, 1, 19), 0, vec3(1, 1, 1), 3, "OBJ\\BoxRG_UVmap.bmp"));
+	interObj.push_back(new TexObject("OBJ\\sock.obj", vec3(3.18, 1.701441, 4.88), 160, vec3(1, 1, 1), 3, Obj[20], "OBJ\\sock_UVmap1.bmp"));
+	interObj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.4, 3.25), 0, vec3(1, 1, 1), 3, Obj[21], "OBJ\\sock_UVmap2.bmp"));
+	interObj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.25, 5.550), 0, vec3(1, 1, 1), 3, Obj[22], "OBJ\\sock_UVmap3.bmp"));
+	interObj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.15, 4.775), 0, vec3(1, 1, 1), 3, Obj[23], "OBJ\\sock_UVmap4.bmp"));
+	interObj.push_back(new TexObject("OBJ\\sock.obj", vec3(4.98, 1.10, 5.84), 0, vec3(1, 1, 1), 3, Obj[24], "OBJ\\sock_UVmap5.bmp"));
+	interObj.push_back(new TexObject("OBJ\\santaHat.obj", vec3(6.483, 1.045, 2.2), 0, vec3(1, 1, 1), 3, Obj[25], "OBJ\\santaHat_UVmap.bmp"));
+	interObj.push_back(new TexObject("OBJ\\candy.obj", vec3(4.45, 1.4, 6.275), 10, vec3(1, 1, 1), 3, Obj[26], "OBJ\\candy_UVmap.bmp"));
 }
 
 void lightInit(void)
@@ -178,8 +164,8 @@ void init(void)
 
 	lightInit();
 
-
 	player = new Player(1, &camPos, &camDirection);
+	gm = new GameManager();
 	objectInit();
 }
 
@@ -271,6 +257,10 @@ void drawText() {
 		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strB, -9.8, -9.6, color.x(), color.y(), color.z());
 
 	}
+
+	string diff = "Differences: " + to_string(gm->differenece);
+	char* strDiff = const_cast<char*>((diff).c_str());
+	draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strDiff , -9.8, 9.4, 1,1,1);
 }
 
 void draw(void)
@@ -286,8 +276,8 @@ void draw(void)
 	player->drawPlayer();
 
 	gluLookAt(camPos[0], camPos[1], camPos[2], camPos[0] + camDirection[0], camPos[1] + camDirection[1], camPos[2] + camDirection[2], camUp[0], camUp[1], camUp[2]);
-
 	drawText();
+
 	glPushMatrix();
 	glTranslatef(-2.53, 0, 8.09);
 	field->drawObj(); 	
@@ -322,7 +312,7 @@ void idle(void)
 			i++;
 		}
 	}
-		printf("%d\n",i);
+	gm->differenece = i;
 }
 
 void pickingEvent()
@@ -557,6 +547,8 @@ void motion(int x, int y)
 		vec3 objPos = camPos + normalPos * dist;
 
 		focusedObj->pos.set(objPos);
+		printf("%f, %f, %f    %f\n", focusedObj->pos.x(), focusedObj->pos.y(), focusedObj->pos.z(), focusedObj->rot);
+
 	}
 }
 

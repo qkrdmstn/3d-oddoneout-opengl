@@ -124,7 +124,7 @@ uchar* readImageData(const char* filename, int* width, int* height, int* channel
 			*channels = 1;
 		}
 		else if (imageSize == (*width) * (*height) * 3) {
-			printf("bmpfunc.cpp : input img : 24bit-img\n");
+			//printf("bmpfunc.cpp : input img : 24bit-img\n");
 			*channels = 3;
 		}
 		else { // Assume 3 channels
