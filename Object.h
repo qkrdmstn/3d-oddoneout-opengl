@@ -103,14 +103,14 @@ public:
 				_center += vec3(pos[0], pos[1], pos[2]);
 			}
 		}
-		//printf("num. vertices : %d\n", _vertices.size());
+		printf("num. vertices : %d\n", _vertices.size());
 
 		//object centralized
-		_center /= _vertices.size();
-		for (auto v : _vertices)
-		{
-			v->pos -= _center;
-		}
+		//_center /= _vertices.size();
+		//for (auto v : _vertices)
+		//{
+		//	v->pos -= _center;
+		//}
 
 		//Read Normal
 		index = 0;
@@ -183,7 +183,7 @@ public:
 		double geoDist = (this->pos - pairObject->pos).length();
 		double angDist = this->rot - pairObject->rot;
 
-		if (geoDist > 1 || colorDist > 1 || angDist > 10) //두 벡터 사이의 거리로 정답 판단
+		if (geoDist > 1 || colorDist > 0.2 || angDist > 10) //두 벡터 사이의 거리로 정답 판단
 			return false;
 		else
 			return true;

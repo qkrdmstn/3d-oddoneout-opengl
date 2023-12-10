@@ -14,7 +14,7 @@ int g_nGLWidth = 1200, g_nGLHeight = 675;
 
 //camera 변수
 double theta = 0, phi = 0;
-Vec3<double> camPos(0, 1, 10);
+Vec3<double> camPos(-2.53, 1.5, 10.09);
 Vec3<double> camDirection(0, 0, -10);
 Vec3<double> camUp(0, 1, 0);
 const double pi = 3.14;
@@ -28,6 +28,8 @@ bool firstDown;
 //object 변수
 vector<Object*> interObj;
 vector<Object*> Obj;
+Object* field;
+
 Object* focusedObj;
 Player* player;
 
@@ -38,21 +40,99 @@ bool isPicking = false;
 
 void objectInit(void)
 {
-	//Uninteractable Object
-	//Obj.push_back(new TexObject("OBJ\\tree.obj", vec3(0, 2, 0), 0, vec3(1, 1, 1), 0, "OBJ\\tree_UVmap.bmp"));
-	//Obj.push_back(new Object("OBJ\\snowman_total.obj", vec3(2, 1, 2), 0, vec3(1, 1, 1), 0));
 
-	Obj.push_back(new Object("OBJ\\cube.obj", vec3(0, 3.60, 0), 0, vec3(1, 1, 1), 0));
-	//Obj.push_back(new TexObject("OBJ\\cube2.obj", vec3(5, 1.5, 5), 0, vec3(1, 1, 1), 0, "OBJ\\cube2.bmp"));
-	/*Obj.push_back(new TexObject("OBJ\\snowman_top3.obj", vec3(5, 2, 5), 0, vec3(1, 1, 1), 0, "OBJ\\snowman_T_UVmap3.bmp"));
-	Obj.push_back(new Object("OBJ\\snowman_hat.obj", vec3(5, 2.5, 5), 0, vec3(0, 0, 0), 0));*/
-	//Obj.push_back(new Object("OBJ\\tree.obj", vec3(5, 0, 5), 0, vec3(0, 1, 0), 0));
+	field = new TexObject("OBJ\\field.obj", vec3(0,0,0), 0, vec3(1,1,1), 0, "OBJ\\tempUV.bmp");
+	
+	//Uninteractable Object
+	//tree
+	Obj.push_back(new TexObject("OBJ\\tree.obj", vec3(3.875, 1.5, 5.375), 0, vec3(1, 1, 1), 0, "OBJ\\tree_UVmap.bmp"));
+	Obj.push_back(new Object("OBJ\\star.obj", vec3(3.885, 4.08, 5.39), 0, vec3(1, 1, 0), 0));
+
+	Obj.push_back(new Object("OBJ\\ball.obj", vec3(3.605, 3.2, 5.455), 0, vec3(1, 1, 0), 0));
+	Obj.push_back(new Object("OBJ\\ball.obj", vec3(4.355, 2.7, 5.705), 0, vec3(1, 0.2, 0.2), 0));
+	Obj.push_back(new Object("OBJ\\ball.obj", vec3(3.885, 2.3, 4.730), 0, vec3(0, 0.5, 0.2), 0));
+	Obj.push_back(new Object("OBJ\\ball.obj", vec3(3.155, 2.0, 5.455), 0, vec3(0.2, 0.2, 1), 0));
+	Obj.push_back(new Object("OBJ\\ball.obj", vec3(3.885, 1.7, 6.255), 0, vec3(0.5, 0.5, 1), 0));
+	Obj.push_back(new Object("OBJ\\ball.obj", vec3(4.885, 1.4, 5.255), 0, vec3(1, 1, 1), 0));
+	Obj.push_back(new Object("OBJ\\ball.obj", vec3(3.885, 1.2, 4.255), 0, vec3(1, 0.3, 0.1), 0));
+	Obj.push_back(new Object("OBJ\\ball.obj", vec3(2.785, 0.85, 5.655), 0, vec3(0.4, 0, 0.8), 0));
+
+	//box
+	Obj.push_back(new TexObject("OBJ\\Box3.obj", vec3(2.275, 0.2, 5.5), 25, vec3(1, 1, 1), 0, "OBJ\\BoxRY_UVmap.bmp"));
+	Obj.push_back(new TexObject("OBJ\\Box2.obj", vec3(2.575, 0.2, 6.2), 0, vec3(1, 1, 1), 0, "OBJ\\BoxYR_UVmap.bmp"));
+	Obj.push_back(new TexObject("OBJ\\Box4.obj", vec3(3.075, 0.2, 6.9), 60, vec3(1, 1, 1), 0, "OBJ\\BoxRY_UVmap.bmp"));
+	Obj.push_back(new TexObject("OBJ\\Box6.obj", vec3(4.675, 0.2, 6.9), 100, vec3(1, 1, 1), 0, "OBJ\\BoxRG_UVmap.bmp"));
+	Obj.push_back(new TexObject("OBJ\\Box1.obj", vec3(5.275, 0.2, 6.2), 20, vec3(1, 1, 1), 0, "OBJ\\BoxRY_UVmap.bmp"));
+	Obj.push_back(new TexObject("OBJ\\Box5.obj", vec3(5.5, 0.2, 5.5), 45, vec3(1, 1, 1), 0, "OBJ\\BoxGR_UVmap.bmp"));
+
+	//snowman
+	Obj.push_back(new TexObject("OBJ\\snowB.obj", vec3(6.5, 0.2, 2.3), 0, vec3(1, 1, 1), 0, "OBJ\\snowB_UVmap.bmp"));
+	Obj.push_back(new TexObject("OBJ\\snowM.obj", vec3(6.5, 0.8, 2.3), 0, vec3(1, 1, 1), 0, "OBJ\\snowM_UVmap.bmp"));
+	Obj.push_back(new TexObject("OBJ\\snowT.obj", vec3(6.5, 1.3, 2.3), 0, vec3(1, 1, 1), 0, "OBJ\\snowT_UVmap.bmp"));
+	Obj.push_back(new Object("OBJ\\snowHat.obj", vec3(6.5, 1.8, 2.3), 0, vec3(0,0,0), 0));
+
+	//etc
+	Obj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.4, 3.25), 0, vec3(1, 1, 1), 0, "OBJ\\sock_UVmap1.bmp"));
+	Obj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.25, 4.0), 0, vec3(1, 1, 1), 0, "OBJ\\sock_UVmap2.bmp"));
+	Obj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.15, 4.775), 0, vec3(1, 1, 1), 0, "OBJ\\sock_UVmap3.bmp"));
+	Obj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.25, 5.550), 0, vec3(1, 1, 1), 0, "OBJ\\sock_UVmap4.bmp"));
+	Obj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.45, 6.35), 0, vec3(1, 1, 1), 0, "OBJ\\sock_UVmap5.bmp"));
+	Obj.push_back(new TexObject("OBJ\\santaHat.obj", vec3(3.875, 1.6, 0.65), 70, vec3(1, 1, 1), 0, "OBJ\\santaHat_UVmap.bmp"));
+
 
 	//Interactable Object
-	interObj.push_back(new TexObject("OBJ\\cube1.obj", vec3(0, 1.5, 0), 0, vec3(1, 1, 1), 2, Obj[0], "OBJ\\asd22.bmp"));
-	//interObj.push_back(new Object("OBJ\\tree.obj", vec3(5, 2, 5), 0, vec3(1, 1, 1), 2, Obj[0]));
-	//interObj.push_back(new TexObject("OBJ\\tree.obj", vec3(5, 2, 0), 0, vec3(1, 1, 1), 2, Obj[0], "OBJ\\tree_UVmap.png"));
-//	interObj.push_back(new Object("OBJ\\tree.obj", vec3(0.5, 3, 0.5), 0, vec3(1, 1, 0), 2, Obj[1]));
+	//tree
+	interObj.push_back(new TexObject("OBJ\\tree.obj", vec3(3.875, 1.5, 5.375), 0, vec3(1, 1, 1), 0, Obj[0], "OBJ\\tree_UVmap.bmp"));
+	interObj.push_back(new Object("OBJ\\star.obj", vec3(3.885, 4.08, 5.39), 0, vec3(1, 1, 0), 3, Obj[1]));
+
+	interObj.push_back(new Object("OBJ\\ball.obj", vec3(3.605, 3.2, 5.455), 0, vec3(1, 1, 0), 3, Obj[2]));
+	interObj.push_back(new Object("OBJ\\ball.obj", vec3(4.355, 2.7, 5.705), 0, vec3(1, 0.2, 0.2), 3, Obj[3]));
+	interObj.push_back(new Object("OBJ\\ball.obj", vec3(3.885, 2.3, 4.730), 0, vec3(0, 0.5, 0.2), 3, Obj[4]));
+	interObj.push_back(new Object("OBJ\\ball.obj", vec3(3.155, 2.0, 5.455), 0, vec3(0.2, 0.2, 1), 3, Obj[5]));
+	interObj.push_back(new Object("OBJ\\ball.obj", vec3(3.885, 1.7, 6.255), 0, vec3(0.5, 0.5, 1), 3, Obj[6]));
+	interObj.push_back(new Object("OBJ\\ball.obj", vec3(4.885, 1.4, 5.255), 0, vec3(1, 1, 1), 3, Obj[7]));
+	interObj.push_back(new Object("OBJ\\ball.obj", vec3(3.885, 1.2, 4.255), 0, vec3(1, 0.3, 0.1), 3, Obj[8]));
+	interObj.push_back(new Object("OBJ\\ball.obj", vec3(2.785, 0.85, 5.655), 0, vec3(0.4, 0, 0.8), 3, Obj[9]));
+
+	//box
+	interObj.push_back(new TexObject("OBJ\\Box3.obj", vec3(2.275, 0.2, 5.5), 25, vec3(1, 1, 1), 3, Obj[10], "OBJ\\BoxRY_UVmap.bmp"));
+	interObj.push_back(new TexObject("OBJ\\Box2.obj", vec3(2.575, 0.2, 6.2), 0, vec3(1, 1, 1), 3, Obj[11], "OBJ\\BoxYR_UVmap.bmp"));
+	interObj.push_back(new TexObject("OBJ\\Box4.obj", vec3(3.075, 0.2, 6.9), 60, vec3(1, 1, 1), 3, Obj[12], "OBJ\\BoxRY_UVmap.bmp"));
+	interObj.push_back(new TexObject("OBJ\\Box6.obj", vec3(4.675, 0.2, 6.9), 100, vec3(1, 1, 1), 3, Obj[13], "OBJ\\BoxRG_UVmap.bmp"));
+	interObj.push_back(new TexObject("OBJ\\Box1.obj", vec3(5.275, 0.2, 6.2), 20, vec3(1, 1, 1), 3, Obj[14], "OBJ\\BoxGR_UVmap.bmp"));
+	interObj.push_back(new TexObject("OBJ\\Box5.obj", vec3(5.5, 0.2, 5.5), 45, vec3(1, 1, 1), 3, Obj[15], "OBJ\\BoxGR_UVmap.bmp"));
+
+	//snowman
+	interObj.push_back(new TexObject("OBJ\\snowB.obj", vec3(6.5, 0.2, 2.3), 0, vec3(1, 1, 1), 3, Obj[16], "OBJ\\snowB_UVmap.bmp"));
+	interObj.push_back(new TexObject("OBJ\\snowM.obj", vec3(6.5, 0.8, 2.3), 0, vec3(1, 1, 1), 3, Obj[17], "OBJ\\snowM_UVmap.bmp"));
+	interObj.push_back(new TexObject("OBJ\\snowT.obj", vec3(6.5, 1.3, 2.3), 0, vec3(1, 1, 1), 3, Obj[18], "OBJ\\snowT_UVmap.bmp"));
+	interObj.push_back(new Object("OBJ\\snowHat.obj", vec3(6.5, 1.8, 2.3), 0, vec3(0, 0, 0), 3, Obj[19]));
+
+	//etc
+	Obj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.4, 3.25), 0, vec3(1, 1, 1), 0, Obj[20], "OBJ\\sock_UVmap1.bmp"));
+	Obj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.25, 4.0), 0, vec3(1, 1, 1), 0, Obj[21], "OBJ\\sock_UVmap2.bmp"));
+	Obj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.15, 4.775), 0, vec3(1, 1, 1), 0, Obj[22], "OBJ\\sock_UVmap3.bmp"));
+	Obj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.25, 5.550), 0, vec3(1, 1, 1), 0, Obj[23], "OBJ\\sock_UVmap4.bmp"));
+	Obj.push_back(new TexObject("OBJ\\sock.obj", vec3(7.55, 1.45, 6.35), 0, vec3(1, 1, 1), 0, Obj[24], "OBJ\\sock_UVmap5.bmp"));
+	Obj.push_back(new TexObject("OBJ\\santaHat.obj", vec3(3.875, 1.6, 0.65), 70, vec3(1, 1, 1), 0, Obj[25], "OBJ\\santaHat_UVmap.bmp"));
+
+	//interObj.push_back(new Object("OBJ\\ball.obj", vec3(0, 1, 0), 0, vec3(1,1,1), 3));
+	//interObj.push_back(new TexObject("OBJ\\santaHat.obj", vec3(1, 1, 1), 0, vec3(1, 1, 1), 3, "OBJ\\santaHat_UVmap.bmp"));
+	//interObj.push_back(new TexObject("OBJ\\snowB.obj", vec3(2, 1, 2), 0, vec3(1, 1, 1), 3, "OBJ\\snowB_UVmap.bmp"));
+	//interObj.push_back(new Object("OBJ\\snowHat.obj", vec3(3, 1, 3), 0, vec3(1, 1, 1), 3));
+	//interObj.push_back(new TexObject("OBJ\\snowM.obj", vec3(4, 1, 4), 0, vec3(1, 1, 1), 3, "OBJ\\snowM_UVmap.bmp"));
+	//interObj.push_back(new TexObject("OBJ\\snowT.obj", vec3(5, 1, 5), 0, vec3(1, 1, 1), 3, "OBJ\\snowT_UVmap.bmp"));
+	//interObj.push_back(new TexObject("OBJ\\sock.obj", vec3(9, 1, 9), 0, vec3(1, 1, 1), 3, "OBJ\\sock_UVmap1.bmp"));
+	//interObj.push_back(new TexObject("OBJ\\sock.obj", vec3(10, 1, 10), 0, vec3(1, 1, 1), 3, "OBJ\\sock_UVmap2.bmp"));
+	//interObj.push_back(new TexObject("OBJ\\sock.obj", vec3(11, 1, 11), 0, vec3(1, 1, 1), 3, "OBJ\\sock_UVmap3.bmp"));
+	//interObj.push_back(new TexObject("OBJ\\sock.obj", vec3(12, 1, 12), 0, vec3(1, 1, 1), 3, "OBJ\\sock_UVmap4.bmp"));
+	//interObj.push_back(new TexObject("OBJ\\sock.obj", vec3(13, 1, 13), 0, vec3(1, 1, 1), 3, "OBJ\\sock_UVmap5.bmp"));
+	//interObj.push_back(new TexObject("OBJ\\Box1.obj", vec3(14, 1, 14), 0, vec3(1, 1, 1), 3, "OBJ\\BoxGR_UVmap.bmp"));
+	//interObj.push_back(new TexObject("OBJ\\Box2.obj", vec3(15, 1, 15), 0, vec3(1, 1, 1), 3, "OBJ\\BoxYR_UVmap.bmp"));
+	//interObj.push_back(new TexObject("OBJ\\Box3.obj", vec3(16, 1, 16), 0, vec3(1, 1, 1), 3, "OBJ\\BoxRY_UVmap.bmp"));
+	//interObj.push_back(new TexObject("OBJ\\Box4.obj", vec3(17, 1, 17), 0, vec3(1, 1, 1), 3, "OBJ\\BoxRY_UVmap.bmp"));
+	//interObj.push_back(new TexObject("OBJ\\Box5.obj", vec3(18, 1, 18), 0, vec3(1, 1, 1), 3, "OBJ\\BoxGR_UVmap.bmp"));
+	//interObj.push_back(new TexObject("OBJ\\Box6.obj", vec3(19, 1, 19), 0, vec3(1, 1, 1), 3, "OBJ\\BoxRG_UVmap.bmp"));
 }
 
 void lightInit(void)
@@ -88,7 +168,7 @@ void lightInit(void)
 
 void init(void)
 {
-	glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 	glClearDepth(1.0f);
 	glEnable(GL_DEPTH_TEST);
 
@@ -99,9 +179,8 @@ void init(void)
 	lightInit();
 
 
-	player = new Player(0, &camPos, &camDirection);
+	player = new Player(1, &camPos, &camDirection);
 	objectInit();
-	//player = new Player();
 }
 
 void draw_axis()
@@ -132,6 +211,7 @@ void drawInterObject()
 		glPushMatrix();
 		glTranslatef(interObj[i]->pos.x(), interObj[i]->pos.y(), interObj[i]->pos.z());
 		glRotatef(interObj[i]->rot, 0, 1, 0);
+		//draw_axis();
 		interObj[i]->drawObj();
 		glPopMatrix();
 	}
@@ -145,22 +225,25 @@ void drawObject(void)
 		glPushMatrix(); 
 		glTranslatef(Obj[i]->pos.x(), Obj[i]->pos.y(), Obj[i]->pos.z());
 		glRotatef(Obj[i]->rot, 0, 1, 0);
+		//draw_axis();
 		Obj[i]->drawObj();
 		glPopMatrix();
 	}
 }
 
-void draw_string(void* font, const char* str, float x_position, float y_position, float red, float green, float blue) {
+void draw_string(void* font, const char* str, float x_position, float y_position, float r, float g, float b) {
 	glPushAttrib(GL_LIGHTING_BIT);
 	glDisable(GL_LIGHTING);
 	glMatrixMode(GL_PROJECTION);
+
 	glPushMatrix();
 	glLoadIdentity();
 	gluOrtho2D(-10, 10, -10, 10);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
-	glColor3f(red, green, blue);
+
+	glColor3f(r, g, b);
 	glRasterPos3f(x_position, y_position, 0);
 	for (unsigned int i = 0; i < strlen(str); i++) {
 		glutBitmapCharacter(font, str[i]);
@@ -182,10 +265,11 @@ void drawText() {
 		char* strR = const_cast<char*>((R).c_str());
 		char* strG = const_cast<char*>((G).c_str());
 		char* strB = const_cast<char*>((B).c_str());
+		vec3 color(player->brush->color.x(), player->brush->color.y(), player->brush->color.z());
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strR, -9.8, -8.2, color.x(), color.y(), color.z());
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strG, -9.8, -8.9, color.x(), color.y(), color.z());
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strB, -9.8, -9.6, color.x(), color.y(), color.z());
 
-		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strR, -9.8, -8.2, player->brush->color.x(), player->brush->color.y(), player->brush->color.z()); //나중에 글자색 바꾸기
-		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strG, -9.8, -8.9, player->brush->color.x(), player->brush->color.y(), player->brush->color.z()); //나중에 글자색 바꾸기
-		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strB, -9.8, -9.6, player->brush->color.x(), player->brush->color.y(), player->brush->color.z()); //나중에 글자색 바꾸기
 	}
 }
 
@@ -199,22 +283,29 @@ void draw(void)
 	GLfloat light_position[] = { 0.0, 10.0, 0.0, 1.0 };
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 	//glDisable(GL_LIGHT0);
-	//player->drawPlayer();
+	player->drawPlayer();
 
 	gluLookAt(camPos[0], camPos[1], camPos[2], camPos[0] + camDirection[0], camPos[1] + camDirection[1], camPos[2] + camDirection[2], camUp[0], camUp[1], camUp[2]);
-	draw_axis();
 
 	drawText();
+	glPushMatrix();
+	glTranslatef(-2.53, 0, 8.09);
+	field->drawObj(); 	
+	glPopMatrix();
 
 	//drawObject
 	glPushMatrix();
-	glTranslatef(-50, 0, 0); //<보기>맵 local 좌표
-	draw_axis();
-	drawObject();
+	glTranslatef(-12.75, 0, 0); //<보기>맵 local 좌표
+	drawObject();  	draw_axis();
 	glPopMatrix();
-	
-	drawInterObject();
 
+	drawInterObject(); 	draw_axis();
+
+	//drawObject
+	glPushMatrix();
+	glTranslatef(7.65, 0, 0); //<보기>맵 local 좌표
+  	//draw_axis();
+	glPopMatrix();
 
 	glutPostRedisplay();
 	glFlush();
@@ -226,22 +317,21 @@ void idle(void)
 	int i = 0;
 	for (auto interObj: interObj)
 	{
-		if (interObj->isCorrect())
+		if (!interObj->isCorrect())
 		{
 			i++;
 		}
 	}
-	/*if (i == 2)
-		printf("clear\n");*/
+		printf("%d\n",i);
 }
 
 void pickingEvent()
 {
-	if (player->state == 1) //picking 모드
+	if (player->state == 1 && (focusedObj->type == 1 || focusedObj->type == 3)) //picking 모드
 	{
 		isPicking = true;
 	}
-	else if (player->state == 2) //color 모드
+	else if (player->state == 2 && (focusedObj->type == 2 || focusedObj->type == 3)) //color 모드
 	{
 		focusedObj->color.set(player->brush->color);
 	}
@@ -521,21 +611,18 @@ void colorModeWheelInput(int direction)
 
 void pickModeWheelInput(int direction)
 {
-	if (focusedObj != NULL)
-	{
-		 if (direction > 0)
-		{
-			focusedObj->rot -= 10;
-			if (focusedObj->rot < 0)
-				focusedObj->rot += 360;
-		}
-		else
-		{
-			focusedObj->rot += 10;
-			if (focusedObj->rot > 360)
-				focusedObj->rot -= 360;
-		}
 
+	if (direction > 0)
+	{
+		focusedObj->rot -= 10;
+		if (focusedObj->rot < 0)
+			focusedObj->rot += 360;
+	}
+	else
+	{
+		focusedObj->rot += 10;
+		if (focusedObj->rot > 360)
+			focusedObj->rot -= 360;
 	}
 
 }
@@ -547,15 +634,17 @@ void specialkeyboard(int key, int x, int y)
 
 void mouse_wheel(int wheel, int direction, int x, int y) {
 
-	if (player->state == 1)
+	if (focusedObj != NULL)
 	{
-		pickModeWheelInput(direction);
+		if (player->state == 1 && (focusedObj->type == 1 || focusedObj->type == 3))
+		{
+			pickModeWheelInput(direction);
+		}
+		else if (player->state == 2 && (focusedObj->type == 2 || focusedObj->type == 3))
+		{
+			colorModeWheelInput(direction);
+		}
 	}
-	else if (player->state == 2)
-	{
-		colorModeWheelInput(direction);
-	}
-
 }
 
 void entry(int state)

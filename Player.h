@@ -20,10 +20,10 @@ public:
 		pos = _camPos;
 		camDirection = _camDirection;
 
-		vec3 handPos = *pos + *camDirection * 2 + vec3(4,-4,3);
-		vec3 brushPos = handPos + *camDirection * 0.5;
-		//hand = new Object("OBJ\\cube1.obj", handPos, -35, vec3(1, 0, 0), 0);
-		//brush = new Object("OBJ\\cube1.obj", brushPos , 0, vec3(1, 1, 1), 0);
+		vec3 handPos = *pos + *camDirection * 2 + vec3(3.8, -2.3, 7.70);
+		hand = new TexObject("OBJ\\hand.obj", handPos, 0, vec3(1, 1, 1), 0, "OBJ\\hand_UVmap.bmp");
+		//brush = new TexObject("OBJ\\candyBrush.obj", handPos, 0, vec3(1,1,1), 3, "OBJ\\candy_UVmap.bmp");
+		brush = new Object("OBJ\\candyBrush.obj", handPos, 0, vec3(1,1,1), 0);
 	}
 
 	~Player();
@@ -31,11 +31,15 @@ public:
 	void drawPlayer() //player 손 draw, 함수 내에서 state에 따라 brush도 그리기
 	{
 
-		glPushMatrix();
-		glTranslatef(hand->pos.x(), hand->pos.y(), hand->pos.z());
-		glRotatef(hand->rot, 0, 1, 0);
-		hand->drawObj();
-		glPopMatrix();
+		if (state == 1)
+		{
+			glPushMatrix();
+			glTranslatef(hand->pos.x(), hand->pos.y(), hand->pos.z());
+			glRotatef(hand->rot, 0, 1, 0);
+			hand->drawObj();
+			glPopMatrix();
+		}
+
 		
 		if (state == 2)
 		{
@@ -46,7 +50,6 @@ public:
 			glPopMatrix();
 		}
 	}
-
 	void animation(); //아마 손 회전하는 애니메이션 필요
 
 };
