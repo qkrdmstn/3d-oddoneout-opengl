@@ -114,7 +114,7 @@ uchar* readImageData(const char* filename, int* width, int* height, int* channel
 
 	if (imageSize == 0)
 	{
-		printf("bmpfunc.cpp : There is no channel info, assume input image channel as 3\n");
+		//printf("bmpfunc.cpp : There is no channel info, assume input image channel as 3\n");
 		*channels = 3;
 		imageSize = (*width) * (*height) * 3; // Assume 3 channels
 	}
@@ -192,7 +192,7 @@ float* readImageDataf(const char* filename, int* width, int* height, int* channe
 
 	if (imageSize == 0)
 	{
-		printf("bmpfunc.cpp : There is no channel info, assume input image channel as 3\n");
+		//printf("bmpfunc.cpp : There is no channel info, assume input image channel as 3\n");
 		*channels = 3;
 		imageSize = (*width) * (*height) * 3; // Assume 3 channels
 	}
