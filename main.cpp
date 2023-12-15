@@ -22,8 +22,8 @@ const double pi = 3.14;
 
 //Stage camera 변수
 double theta = 0, phi = 0;
-Vec3<double> camPos(-2.53, 1.5, 13.09);
-Vec3<double> camDirection(0, 0, -10);
+Vec3<double> camPos(-2.53, 1.5, 10.09);
+Vec3<double> camDirection(0, 0, -1);
 Vec3<double> camUp(0, 1, 0);
 
 //Hint camera 변수
@@ -365,7 +365,7 @@ void drawText() {
 	{
 		string tutorial = "Press any key to start the game";
 		char* Ctutorial = const_cast<char*>((tutorial).c_str());
-		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, Ctutorial, -2.5, -2, 0,0,0);
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, Ctutorial, -2.5, -2, 1, 1, 1);
 	}
 	else if (gm->curState == 1)
 	{
@@ -407,8 +407,8 @@ void drawText() {
 		string Restart = "Press any key to Restart the game";
 		char* strClear = const_cast<char*>((Clear).c_str());
 		char* strRestart = const_cast<char*>((Restart).c_str());
-		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strClear, -1.0, -1.2, 0, 0, 0);
-		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strRestart, -2.5, -2, 0, 0, 0);
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strClear, -1.0, -1.2, 1, 1, 1);
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strRestart, -2.5, -2, 1, 1, 1);
 	}
 	else if (gm->curState == 3)
 	{
@@ -416,28 +416,28 @@ void drawText() {
 		string Restart = "Press any key to Restart the game";
 		char* strOver = const_cast<char*>((Over).c_str());
 		char* strRestart = const_cast<char*>((Restart).c_str());
-		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strOver, -1.0, -1.2, 0, 0, 0);
-		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strRestart, -2.5, -2, 0, 0, 0);
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strOver, -1.0, -1.2, 1, 1, 1);
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strRestart, -2.5, -2, 1, 1, 1);
 	}
 	else if (gm->curState == 4)
 	{
 		string diff = "Differences: " + to_string(gm->differenece);
 		char* strDiff = const_cast<char*>((diff).c_str());
-		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strDiff, -9.9, 9.3, 0,0,0);
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strDiff, -9.9, 9.3, 1, 1, 1);
 
 		//Hint Timer Text
 		int intTime = gm->Htimer; //내림
 		int floatTime = (gm->Htimer - intTime) * 100; //소수점 아래 둘째자리
-		string time = "Timer: " + to_string(intTime) + "." + to_string(floatTime);
+		string time = "Hint Timer: " + to_string(intTime) + "." + to_string(floatTime);
 		char* strTime = const_cast<char*>((time).c_str());
 
-		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strTime, -0.5, 9.3, 0, 0, 0);
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, strTime, -0.5, 9.3, 1, 1, 1);
 	}
 }
 
 void drawStageState()
 {
-	//glViewport(0, 0, g_nGLWidth, g_nGLHeight);
+	glViewport(0, 0, g_nGLWidth, g_nGLHeight);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -511,13 +511,13 @@ void drawMultiView1()
 	glLoadIdentity();
 	gluLookAt(cam[0], cam[1], cam[2], center[0], center[1], center[2], up[0], up[1], up[2]);
 
-	drawText();
-
 	GLfloat light_position3[] = { Obj[1]->pos.x(), Obj[1]->pos.y(), Obj[1]->pos.z(), 1.0 };
 	GLfloat light_position5[] = { Obj[5]->pos.x(), Obj[5]->pos.y(), Obj[5]->pos.z(), 1.0 };
 
 	glLightfv(GL_LIGHT3, GL_POSITION, light_position3);
 	glLightfv(GL_LIGHT5, GL_POSITION, light_position5);
+
+	drawText();
 
 	drawObject();
 
@@ -599,15 +599,13 @@ void drawHintState()
 
 void draw(void)
 {
-	if (gm->curState == 1 || gm->curState == 0) //stage 상태일 때,
-	{
-		drawStageState();
-
-	}
-	else if (gm->curState == 4) //Hint 상태일 때 (Multi ViewPort)
+	if (gm->curState == 4) //Hint 상태일 때 (Multi ViewPort)
 	{
 		drawHintState();
 	}
+	else
+		drawStageState();
+
 }
 
 void idle(void)
@@ -817,6 +815,21 @@ void keyboard(unsigned char key, int x, int y)
 			gm->Htimer = gm->HlimitTime;
 			printf("Hint state\n");
 		}
+
+		if (key == 'c')
+		{
+			for (int i = 0; i < interObj.size(); i++)
+			{
+				interObj[i]->pos.set(interObj[i]->pairObject->pos);
+				interObj[i]->color.set(interObj[i]->pairObject->color);
+				interObj[i]->rot = interObj[i]->pairObject->rot;
+			}
+		}
+
+		if (key == 'o')
+		{
+			gm->timer = 40.0f;
+		}
 	}
 	else if(gm->curState != 4) //Start
 	{
@@ -840,6 +853,7 @@ void keyboard(unsigned char key, int x, int y)
 		gm->curState = 1;
 		startT = glutGet(GLUT_ELAPSED_TIME);
 		gm->timer = gm->limitTime;
+		gm->Htimer = gm->HlimitTime;
 	}
 	glutPostRedisplay();
 }
