@@ -22,10 +22,12 @@ public:
 		state = _state;
 		pos = _camPos;
 		camDirection = _camDirection;
+		anim = 0;
+		animFlag = false;
+		animCount = 0;
 
 		vec3 handPos = *pos + *camDirection * 2 + vec3(3.8, -2.3, 7.90);
 		hand = new Object("OBJ\\hand.obj", handPos, 0, vec3(1, 0.8, 0.6), 0);
-		//brush = new TexObject("OBJ\\candyBrush.obj", handPos, 0, vec3(1,1,1), 3, "OBJ\\candy_UVmap.bmp");
 		brush = new Object("OBJ\\candyBrush.obj", handPos, 0, vec3(1,1,1), 0);
 	}
 
@@ -46,7 +48,6 @@ public:
 			hand->drawObj();
 			glPopMatrix();
 		}
-
 		
 		if (state == 2)
 		{

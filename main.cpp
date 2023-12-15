@@ -15,6 +15,7 @@
 #include "TexObject.h"
 #include "Player.h"
 #include "GameManager.h"
+#include "Snowing.h"
 
 int g_nGLWidth = 1200, g_nGLHeight = 675;
 const double pi = 3.14;
@@ -22,7 +23,7 @@ const double pi = 3.14;
 //Stage camera 변수
 double theta = 0, phi = 0;
 Vec3<double> camPos(-2.53, 1.5, 13.09);
-Vec3<double> camDirection(0, 0, -1);
+Vec3<double> camDirection(0, 0, -10);
 Vec3<double> camUp(0, 1, 0);
 
 //Hint camera 변수
@@ -41,10 +42,14 @@ bool firstDown;
 vector<Object*> interObj;
 vector<Object*> Obj;
 Object* field;
+Object* hintFloor;
 
 Object* focusedObj;
 Player* player;
 GameManager* gm;
+
+//snowing 
+Snowing* snowing;
 
 //picking & selection
 int curColor = -1;
@@ -58,7 +63,8 @@ bool lightFlag = true;
 void objectInit(void)
 {
 	field = new TexObject("OBJ\\field.obj", vec3(0,0,0), 0, vec3(1,1,1), 0, "Texture\\field_UVmap.bmp");
-	
+	hintFloor = new Object("OBJ\\floor.obj", vec3(0,0,0), 0, vec3(1, 1, 1), 0);
+
 	//Uninteractable Object
 	//tree
 	Obj.push_back(new TexObject("OBJ\\tree.obj", vec3(3.875, 1.5, 5.375), 0, vec3(1, 1, 1), 0, "Texture\\tree_UVmap.bmp"));
@@ -275,6 +281,8 @@ void init(void)
 
 	player = new Player(1, &camPos, &camDirection);
 	gm = new GameManager();
+	snowing = new Snowing();
+
 	objectInit();
 	gm->cubeTexture();
 	PlaySound(TEXT("sound\\BGM.wav"), NULL, SND_ASYNC | SND_ALIAS | SND_LOOP);
@@ -429,22 +437,20 @@ void drawText() {
 
 void drawStageState()
 {
-	glViewport(0, 0, g_nGLWidth, g_nGLHeight);
+	//glViewport(0, 0, g_nGLWidth, g_nGLHeight);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glEnable(GL_DEPTH_TEST);
 
 	//카메라 위치 조명
 	GLfloat light_position0[] = { 0.0, 0.0, 0.0, 1.0 };
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position0);
-	//glDisable(GL_LIGHT0);
 	player->drawPlayer();
-
-	gluLookAt(camPos[0], camPos[1], camPos[2], camPos[0] + camDirection[0], camPos[1] + camDirection[1], camPos[2] + camDirection[2], camUp[0], camUp[1], camUp[2]);
+	draw_axis();
+	gluLookAt(camPos[0], camPos[1], camPos[2], camPos[0] + camDirection[0], camPos[1] + camDirection[1], camPos[2] + camDirection[2], camUp[0], camUp[1], camUp[2]);	
 	drawText();
-
 	gm->drawSkyBox();
+	snowing->DrawSnow();
 
 	glPushMatrix();
 	glTranslatef(-2.53, 0, 8.09);
@@ -514,6 +520,13 @@ void drawMultiView1()
 	glLightfv(GL_LIGHT5, GL_POSITION, light_position5);
 
 	drawObject();
+
+	glPushMatrix();
+	glTranslatef(3.885, -0.2, 5.39);
+	hintFloor->drawObj();
+	glPopMatrix();
+	snowing->DrawSnow();
+
 	glFlush();
 }
 
@@ -534,6 +547,13 @@ void drawMultiView2()
 	glLightfv(GL_LIGHT6, GL_POSITION, light_position6);
 
 	drawInterObject();
+
+	glPushMatrix();
+	glTranslatef(3.885, -0.2, 5.39);
+	hintFloor->drawObj();
+	glPopMatrix();
+	snowing->DrawSnow();
+
 	glFlush();
 }
 
@@ -574,7 +594,6 @@ void drawHintState()
 		glEnable(GL_LIGHT5);
 		glEnable(GL_LIGHT6);
 	}
-
 	glutSwapBuffers();
 }
 
@@ -583,6 +602,7 @@ void draw(void)
 	if (gm->curState == 1 || gm->curState == 0) //stage 상태일 때,
 	{
 		drawStageState();
+
 	}
 	else if (gm->curState == 4) //Hint 상태일 때 (Multi ViewPort)
 	{
@@ -693,13 +713,6 @@ void picking(int x, int y)
 
 	// fifth step
 	if (hits <= 0) return;
-
-	//for (int i = 0; i < hits * 4; i++)
-	//{
-	//	//if (!selectBuf[i]) break;
-	//	printf("%u ", selectBuf[i]);
-	//}
-	//printf("\n");
 
 	bool interaction = false;
 	double minDist = 10.00f; //상호작용 최소 거리

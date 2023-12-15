@@ -25,6 +25,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Snowing.h" />
     <ClInclude Include="TexObject.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="Player.h" />
