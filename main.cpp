@@ -22,7 +22,7 @@ const double pi = 3.14;
 
 //Stage camera 변수
 double theta = 0, phi = 0;
-Vec3<double> camPos(-2.53, 1.5, 10.09);
+Vec3<double> camPos(-2.53, 1.5, 13.09);
 Vec3<double> camDirection(0, 0, -1);
 Vec3<double> camUp(0, 1, 0);
 
@@ -44,7 +44,6 @@ vector<Object*> Obj;
 Object* field;
 Object* hintFloor;
 
-Object* focusedObj;
 Player* player;
 GameManager* gm;
 
@@ -54,9 +53,11 @@ Snowing* snowing;
 //picking & selection
 int curColor = -1;
 bool isPicking = false;
+Object* focusedObj; //picking obj
 
 double startT;
 
+//light 깜빡임 효과 관련 변수
 double lightTimer;
 bool lightFlag = true;
 
@@ -269,7 +270,7 @@ void lightInit(void)
 
 void init(void)
 {
-	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+	glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 	glClearDepth(1.0f);
 	glEnable(GL_DEPTH_TEST);
 
@@ -285,7 +286,21 @@ void init(void)
 
 	objectInit();
 	gm->cubeTexture();
-	PlaySound(TEXT("sound\\BGM.wav"), NULL, SND_ASYNC | SND_ALIAS | SND_LOOP);
+
+	//조작법 출력
+	printf("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 조작법 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ\n");
+	printf("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 키보드 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ\n");
+	printf("w, a, s, d: 플레이어 이동\n");
+	printf("h: 힌트 (1번 사용 가능)\n");
+	printf("1: Picking Mode, 2: Color Mode 전환\n");
+	printf("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ\n");
+
+	printf("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 마우스 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ\n");
+	printf("마우스 좌클릭: 오브젝트 이동/색칠\n");
+	printf("마우스 휠클릭: 색칠 메뉴\n");
+	printf("마우스 휠 UP/DOWN: 오브젝트 회전/선택된 RGB 값 변경\n");
+	printf("마우스 우클릭: 카메라 회전\n");
+	printf("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ\n");
 }
 
 void draw_axis()
@@ -363,9 +378,16 @@ void draw_string(void* font, const char* str, float x_position, float y_position
 void drawText() {
 	if (gm->curState == 0)
 	{
-		string tutorial = "Press any key to start the game";
-		char* Ctutorial = const_cast<char*>((tutorial).c_str());
-		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, Ctutorial, -2.5, -2, 1, 1, 1);
+		string tutorial1 = "Computer Graphics Mini-Project";
+		string tutorial2 = "12211774 Park Eun Su";
+		string tutorial3 = "Press any key to start the game";
+
+		char* Ctutorial1 = const_cast<char*>((tutorial1).c_str());
+		char* Ctutorial2 = const_cast<char*>((tutorial2).c_str());
+		char* Ctutorial3 = const_cast<char*>((tutorial3).c_str());
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, Ctutorial1, -2.7, 5, 1, 1, 1);
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, Ctutorial2, -1.7, 4, 1, 1, 1);
+		draw_string(GLUT_BITMAP_TIMES_ROMAN_24, Ctutorial3, -2.5, -2, 1, 1, 1);
 	}
 	else if (gm->curState == 1)
 	{
@@ -435,6 +457,22 @@ void drawText() {
 	}
 }
 
+void drawStart()
+{
+	glViewport(0, 0, g_nGLWidth, g_nGLHeight);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glPushMatrix();
+	gluOrtho2D(0.0, g_nGLWidth, 0.0, g_nGLHeight); //2D viewport draw
+	drawText();
+	glPopMatrix();
+
+	glFlush();
+	glutSwapBuffers();
+}
+
 void drawStageState()
 {
 	glViewport(0, 0, g_nGLWidth, g_nGLHeight);
@@ -448,9 +486,10 @@ void drawStageState()
 	player->drawPlayer();
 	draw_axis();
 	gluLookAt(camPos[0], camPos[1], camPos[2], camPos[0] + camDirection[0], camPos[1] + camDirection[1], camPos[2] + camDirection[2], camUp[0], camUp[1], camUp[2]);	
+	
 	drawText();
-	gm->drawSkyBox();
 	snowing->DrawSnow();
+	gm->drawSkyBox();
 
 	glPushMatrix();
 	glTranslatef(-2.53, 0, 8.09);
@@ -561,20 +600,16 @@ void drawHintState()
 {
 	/* 화면을 깨끗하게 지우기 */
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);      // 물체의 앞/뒤 관계를 위한 DEPTH 추가
-	// glMatrixMode(GL_MODELVIEW);
+	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glEnable(GL_DEPTH_TEST);   // 뒤에 있는 object가 앞으로 보이는 현상 제거
+	glEnable(GL_DEPTH_TEST);   
 	 
 	cam[0] = radius * cos(beta * pi / 180) * cos(alpha * pi / 180) + 3.875;
 	cam[1] = radius * sin(alpha * pi / 180) + 1.5;
 	cam[2] = radius * cos(alpha * pi / 180) * sin(beta * pi / 180) + 5.375;
 	up[0] = 0;
 	up[1] = cos(alpha * pi / 180);
-	up[2] = 0;
-
-	glClear(GL_COLOR_BUFFER_BIT);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+	up[2] = 0;;
 
 	glPopMatrix();
 	drawMultiView1(); // 왼쪽에 그리기
@@ -603,9 +638,12 @@ void draw(void)
 	{
 		drawHintState();
 	}
+	else if (gm->curState == 0) //시작 화면
+	{
+		drawStart();
+	}
 	else
 		drawStageState();
-
 }
 
 void idle(void)
@@ -627,9 +665,11 @@ void idle(void)
 			}
 		}
 		gm->differenece = i;
-		if (gm->differenece == 0)
+		if (gm->differenece == 0) //게임 클리어
 		{
 			gm->GameClear();
+			camPos.set(-2.53, 1.5, 13.09);
+			camDirection.set(0, 0, -1);
 		}
 
 		//제한시간 타이머
@@ -639,9 +679,11 @@ void idle(void)
 		{
 			gm->timer = 0.0f;
 			gm->GameOver();
+			camPos.set(-2.53, 1.5, 13.09);
+			camDirection.set(0, 0, -1);
 		}
 
-		if (player->animFlag)
+		if (player->animFlag) //animFlag는 마우스 좌클릭 시 true
 		{
 			player->animation();
 		}
@@ -751,7 +793,7 @@ void keyboard(unsigned char key, int x, int y)
 		double cameraSpeed = 0.7f;
 		Vec3<double> cameraV = camDirection.cross(camUp); //카메라 uvn 좌표계 중, v축 방향
 
-		if (key == 'w') //n 방향으로 이동, y축 방향 이동 x
+		if (key == 'w') //n축 방향으로 이동, y축 방향 이동 x
 		{
 			camPos[0] += camDirection[0] * cameraSpeed;
 			camPos[2] += camDirection[2] * cameraSpeed;
@@ -772,7 +814,7 @@ void keyboard(unsigned char key, int x, int y)
 			}
 		}
 
-		if (key == 'd') //v 방향으로 이동
+		if (key == 'd') //v축 방향으로 이동
 		{
 			camPos[0] += cameraV[0] * cameraSpeed;
 			camPos[2] += cameraV[2] * cameraSpeed;
@@ -796,12 +838,12 @@ void keyboard(unsigned char key, int x, int y)
 		if (key == '1') //mode 변경
 		{
 			player->state = 1;
-			printf("player is Picking Mode\n");
+			//printf("player is Picking Mode\n");
 		}
 		else if (key == '2')
 		{
 			player->state = 2;
-			printf("player is Color Mode\n");
+			//printf("player is Color Mode\n");
 		}
 
 		if (key == 'h' && gm->Htimer > 0)
@@ -813,10 +855,10 @@ void keyboard(unsigned char key, int x, int y)
 			center.set(3.875, 1.5, 5.375);
 			up.set(0, 1, 0);
 			gm->Htimer = gm->HlimitTime;
-			printf("Hint state\n");
+			//printf("Hint state\n");
 		}
 
-		if (key == 'c')
+		if (key == 'c') //게임 클리어 하기
 		{
 			for (int i = 0; i < interObj.size(); i++)
 			{
@@ -826,9 +868,9 @@ void keyboard(unsigned char key, int x, int y)
 			}
 		}
 
-		if (key == 'o')
+		if (key == 'o') //게임 오버하기
 		{
-			gm->timer = 40.0f;
+			gm->timer = 30.0f;
 		}
 	}
 	else if(gm->curState != 4) //Start
@@ -847,20 +889,20 @@ void keyboard(unsigned char key, int x, int y)
 			Obj.clear();
 
 			objectInit();
-			printf("restart\n");
-			PlaySound(TEXT("sound\\BGM.wav"), NULL, SND_ASYNC | SND_ALIAS | SND_LOOP);
+			//printf("restart\n");
 		}
 		gm->curState = 1;
 		startT = glutGet(GLUT_ELAPSED_TIME);
 		gm->timer = gm->limitTime;
 		gm->Htimer = gm->HlimitTime;
+		PlaySound(TEXT("sound\\BGM.wav"), NULL, SND_ASYNC | SND_ALIAS | SND_LOOP);
 	}
 	glutPostRedisplay();
 }
 
 void specialkeyboard(int key, int x, int y)
 {
-	if (gm->curState == 4)
+	if (gm->curState == 4) //hint 상태에서 카메라 회전
 	{
 		if (key == GLUT_KEY_LEFT)
 		{
@@ -915,9 +957,10 @@ void motion(int x, int y)
 	if (gm->curState == 1)
 	{
 		//mouse 움직임에 따른 카메라 회전
+		//첫 위치 - 다음 위치의 차이로 구좌표계 회전
 		if (rightDown)
 		{
-			if (firstDown)
+			if (firstDown) 
 			{
 				lastPos[0] = x;
 				lastPos[1] = y;
@@ -949,11 +992,12 @@ void motion(int x, int y)
 			front[2] = cos(theta * pi / 180) * sin(phi * pi / 180);
 			front.normalize();
 
-			camDirection = front;
+			camDirection = front; //카메라가 바라보는 방향 벡터 업데이트
 		}
 
-		if (isPicking)
+		if (isPicking) //마우스 좌클릭(드래그): picking 오브젝트 위치 변경
 		{
+			//viewport 좌표를 world 좌표로 투영
 			GLint viewport[4];
 			GLdouble modelview[16];
 			GLdouble projection[16];
@@ -971,14 +1015,14 @@ void motion(int x, int y)
 			gluUnProject(winX, winY, winZ, modelview, projection, viewport, &posX, &posY, &posZ);
 			//printf("x: %f, y: %f, z: %f\n", posX, posY, posZ);
 
-			vec3 clickPos(posX, posY, posZ);
+			vec3 clickPos(posX, posY, posZ); //world 좌표계에서의 마우스 클릭 좌표
 			vec3 normalPos = (clickPos - camPos); //카메라-마우스 클릭 좌표 방향벡터
 			normalPos.normalize();
 
-			double dist = (camPos - focusedObj->pos).length(); //움직일 때, 원래의 거리를 유지
+			double dist = (camPos - focusedObj->pos).length(); //위치 변경 시, 원래의 거리를 유지
 			vec3 objPos = camPos + normalPos * dist;
 
-			focusedObj->pos.set(objPos);
+			focusedObj->pos.set(objPos); //picking 오브젝트 위치 업데이트
 			//printf("%f, %f, %f    %f\n", focusedObj->pos.x(), focusedObj->pos.y(), focusedObj->pos.z(), focusedObj->rot);
 		}
 	}
@@ -987,7 +1031,7 @@ void motion(int x, int y)
 
 void colorModeWheelInput(int direction)
 {
-	if (curColor == 0)
+	if (curColor == 0) //Color 모드일 때의 RGB 값 조절
 	{
 		if (direction > 0)
 		{
@@ -1037,7 +1081,7 @@ void colorModeWheelInput(int direction)
 
 void pickModeWheelInput(int direction)
 {
-	if (direction > 0)
+	if (direction > 0) //Picking 모드일 때의 오브젝트 회전
 	{
 		focusedObj->rot -= 10;
 		if (focusedObj->rot < 0)
@@ -1054,7 +1098,7 @@ void pickModeWheelInput(int direction)
 
 void mouse_wheel(int wheel, int direction, int x, int y) {
 
-	if (gm->curState == 1)
+	if (gm->curState == 1) //Stage 상태
 	{
 		if (focusedObj != NULL && player->state == 1 && (focusedObj->type == 1 || focusedObj->type == 3))
 		{
@@ -1065,9 +1109,9 @@ void mouse_wheel(int wheel, int direction, int x, int y) {
 			colorModeWheelInput(direction);
 		}
 	}
-	else if (gm->curState == 4)
+	else if (gm->curState == 4) //Hint 상태
 	{
-		if (direction > 0)
+		if (direction > 0) //카메라 확대
 		{
 			radius -= 1;
 		}
@@ -1077,13 +1121,6 @@ void mouse_wheel(int wheel, int direction, int x, int y) {
 		}
 	}
 	glutPostRedisplay();
-}
-
-void entry(int state)
-{
-	//printf("state: %d\n", state);
-	//if (state == GLUT_ENTERED)
-	//	firstDown = true;
 }
 
 void color_menu_function(int option) //기본색 변경 & draw 함수 호출해서 다시 기본색으로 그리기 (크기 0.5f 고정)
@@ -1110,10 +1147,6 @@ void color_menu_function(int option) //기본색 변경 & draw 함수 호출해서 다시 기�
 
 void main_menu_function(int option)
 {
-	if (option == 1 && focusedObj != NULL)
-	{
-		focusedObj->rot = 0;
-	}
 }
 
 void menuSetting()
@@ -1126,7 +1159,6 @@ void menuSetting()
 	glutAddMenuEntry("Close", 4);
 
 	mainMenu = glutCreateMenu(main_menu_function); //mainMenu : Quit, Go, Size(sub), Color(sub)
-	glutAddMenuEntry("Init Rotation", 1);
 	glutAddSubMenu("ColorSelect", colorMenu);
 	glutAttachMenu(GLUT_MIDDLE_BUTTON); //마우스 오른쪽 버튼에 연결
 }
@@ -1136,7 +1168,7 @@ int main(int argc, char ** argv)
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowSize(g_nGLWidth, g_nGLHeight);
-	glutInitWindowPosition(300, 300);
+	glutInitWindowPosition(50, 50);
 	glutCreateWindow("12211774_박은수");
 
 	init();
@@ -1148,7 +1180,6 @@ int main(int argc, char ** argv)
 	glutKeyboardFunc(keyboard);
 	glutSpecialFunc(specialkeyboard);
 	glutIdleFunc(idle);
-	//glutEntryFunc(entry); //window 포커스 감지
 
 	menuSetting();
 

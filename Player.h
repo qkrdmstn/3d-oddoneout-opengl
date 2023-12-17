@@ -7,7 +7,7 @@ class Player
 
 public:
 	int state; //1: picking mode, 2: color mode
-	double anim; //animation rotate
+	double anim; //animation 회전 각도
 	bool animFlag;
 	int animCount;
 
@@ -26,7 +26,7 @@ public:
 		animFlag = false;
 		animCount = 0;
 
-		vec3 handPos = *pos + *camDirection * 2 + vec3(3.6, -2.3, -10.1);
+		vec3 handPos = *pos + *camDirection * 2 + vec3(3.6, -2.3, -13.1);
 		hand = new Object("OBJ\\hand.obj", handPos, 0, vec3(1, 0.8, 0.6), 0);
 		brush = new Object("OBJ\\candyBrush.obj", handPos, 0, vec3(1,1,1), 0);
 	}
@@ -60,7 +60,7 @@ public:
 		}
 	}
 
-	void animation() //아마 손 회전하는 애니메이션 필요
+	void animation() //손 회전하는 애니메이션
 	{
 		if (animCount < 30)
 		{

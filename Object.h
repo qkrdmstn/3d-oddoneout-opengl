@@ -85,7 +85,7 @@ public:
 	{
 	}
 
-	void loadObj(const char* filename)
+	void loadObj(const char* filename) //obj parsing
 	{
 		FILE* fp;
 		char header[256] = { 0 };
@@ -103,14 +103,6 @@ public:
 				_center += vec3(pos[0], pos[1], pos[2]);
 			}
 		}
-		//printf("num. vertices : %d\n", _vertices.size());
-
-		//object centralized
-		//_center /= _vertices.size();
-		//for (auto v : _vertices)
-		//{
-		//	v->pos -= _center;
-		//}
 
 		//Read Normal
 		index = 0;
@@ -120,7 +112,6 @@ public:
 				_Nvertices.push_back(new Vertex(index++, vec3(pos[0], pos[1], pos[2])));
 			}
 		}
-		//printf("num. Nvertices : %d\n", _vertices.size());
 
 		//Read UV pos
 		index = 0;
@@ -130,7 +121,6 @@ public:
 				_Tvertices.push_back(new Vertex(index++, vec3(pos[0], pos[1], 0)));
 			}
 		}
-		//printf("num. Tvertices : %d\n", _Tvertices.size());
 
 		//Read Face index
 		index = 0;
@@ -154,8 +144,7 @@ public:
 				_Nfaces.push_back(new Face(index++, vn0, vn1, vn2));
 			}
 		}
-		//printf("num. faces : %d\n", _faces.size());
-		//printf("num. tfaces : %d\n", _Tfaces.size());
+
 		fclose(fp);
 	}
 
@@ -171,15 +160,13 @@ public:
 
 				//printf("%d/%d ",  _faces[i]->v[j]->index + 1, _Tfaces[i]->v[j]->index + 1);
 			}
-			//printf("\n");
 			glEnd();
 		}
-		//glutSolidSphere(1, 30, 30);
 	}
 
 	bool isCorrect()
 	{
-		double colorDist = (this->color - pairObject->color).length();
+		double colorDist = (this->color - pairObject->color).length(); //pair Object와의 차이 계산
 		double geoDist = (this->pos - pairObject->pos).length();
 		double angDist = this->rot - pairObject->rot;
 

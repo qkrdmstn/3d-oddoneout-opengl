@@ -60,6 +60,5 @@ public:
 			//printf("\n");
 			glEnd();
 		}
-		//glutSolidSphere(1, 30, 30);
 	}
 };

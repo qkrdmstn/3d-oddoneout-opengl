@@ -11,7 +11,6 @@ struct Snow
 	vec3 curPos;
 	vec3 nxtPos;
 	vec3 vel;
-	float size;
 };
 
 class Snowing
@@ -31,7 +30,7 @@ public:
 
 	}
 
-	void CreateSnow()
+	void CreateSnow() //snow 위치 및 속도를 범위 내에 랜덤 생성
 	{
 		srand(time(NULL));
 		
@@ -52,9 +51,6 @@ public:
 			if (Vz == 0)
 				Vz = ((rand() % 3) + 1) * 0.01;
 			s[i].vel.set(Vx, Vy, Vz);
-
-			s[i].size = 0.1;
-
 		};
 	}
 
@@ -65,13 +61,13 @@ public:
 			glColor3f(1, 1, 1);
 			glPushMatrix();
 			glTranslatef(s[i].curPos.x(), s[i].curPos.y(), s[i].curPos.z());
-			glutSolidSphere(s[i].size, 20, 20);
+			glutSolidSphere(0.1, 10, 10);
 			glPopMatrix();
 
 ;			s[i].nxtPos = s[i].curPos + s[i].vel;
 			s[i].curPos = s[i].nxtPos;
 
-			if (s[i].curPos.x() < -15)
+			if (s[i].curPos.x() < -15) //일정 범위 밖으로 넘어갈 경우, 반대편으로 위치 변경
 				s[i].curPos[0] = 10;
 			else if(s[i].curPos.x() > 10)
 				s[i].curPos[0] = -15;
@@ -83,7 +79,6 @@ public:
 				s[i].curPos[2] = 15;
 			else if (s[i].curPos.z() > 15)
 				s[i].curPos[2] = -1;
-
 		}
 	}
 
