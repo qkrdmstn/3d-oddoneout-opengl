@@ -22,7 +22,7 @@ const double pi = 3.14;
 
 //Stage camera 변수
 double theta = 0, phi = 0;
-Vec3<double> camPos(-2.53, 1.5, 13.09);
+Vec3<double> camPos(-2.53, 1.5, 16.09);
 Vec3<double> camDirection(0, 0, -1);
 Vec3<double> camUp(0, 1, 0);
 
@@ -301,6 +301,14 @@ void init(void)
 	printf("마우스 휠 UP/DOWN: 오브젝트 회전/선택된 RGB 값 변경\n");
 	printf("마우스 우클릭: 카메라 회전\n");
 	printf("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ\n");
+	printf("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 게임 방법 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ\n");
+	printf("1. 왼쪽의 <보기> 맵과 오른쪽의 <상호작용> 맵의 다른 점을 찾는다.\n");
+	printf("2. Picking 모드에서 좌클릭을 통한 오브젝트의 위치 및 휠을 이용한 오브젝트 회전을 조절한다.\n");
+	printf("3. Color 모드에서 휠클릭을 통해 색을 정한다.\n");
+	printf("4. 좌클릭을 통해 <상호작용> 맵의 오브젝트 색을 변경한다.\n");
+	printf("5. 제한시간 내에 모든 오브젝트를 찾아 바꾸면 Clear!\n");
+	printf("ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ\n");
+
 }
 
 void draw_axis()
@@ -484,7 +492,7 @@ void drawStageState()
 	GLfloat light_position0[] = { 0.0, 0.0, 0.0, 1.0 };
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position0);
 	player->drawPlayer();
-	draw_axis();
+
 	gluLookAt(camPos[0], camPos[1], camPos[2], camPos[0] + camDirection[0], camPos[1] + camDirection[1], camPos[2] + camDirection[2], camUp[0], camUp[1], camUp[2]);	
 	
 	drawText();
@@ -668,7 +676,7 @@ void idle(void)
 		if (gm->differenece == 0) //게임 클리어
 		{
 			gm->GameClear();
-			camPos.set(-2.53, 1.5, 13.09);
+			camPos.set(-2.53, 1.5, 16.09);
 			camDirection.set(0, 0, -1);
 		}
 
@@ -679,7 +687,7 @@ void idle(void)
 		{
 			gm->timer = 0.0f;
 			gm->GameOver();
-			camPos.set(-2.53, 1.5, 13.09);
+			camPos.set(-2.53, 1.5, 16.09);
 			camDirection.set(0, 0, -1);
 		}
 
@@ -870,7 +878,10 @@ void keyboard(unsigned char key, int x, int y)
 
 		if (key == 'o') //게임 오버하기
 		{
-			gm->timer = 30.0f;
+			if (gm->timer > 30)
+				gm->timer = 30.0f;
+			else
+				gm->timer -= 2.0f;
 		}
 	}
 	else if(gm->curState != 4) //Start
